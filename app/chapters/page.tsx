@@ -5,6 +5,7 @@ import PubCard from "@/components/PubCard";
 import { StaggerList, StaggerItem } from "@/components/motion";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/chapters" },
   title: "Book Chapters",
   description: "Book chapters contributed by Zunera.",
 };

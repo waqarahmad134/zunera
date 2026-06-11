@@ -1,8 +1,30 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, ArrowUpRight, BookOpen, FileText, Newspaper, Landmark } from "lucide-react";
 import { site, books, papers, opinions, interviews, policy, chapters } from "@/lib/data";
 import { HeroText, Reveal, StaggerList, StaggerItem } from "@/components/motion";
+import { siteUrl } from "@/lib/seo";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
+
+const personLd = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: site.name,
+  jobTitle: site.role,
+  description: site.tagline,
+  image: `${siteUrl()}${site.portrait}`,
+  url: siteUrl(),
+  sameAs: [site.socials.twitter, site.socials.linkedin],
+  affiliation: site.affiliations.map((a) => ({
+    "@type": "Organization",
+    name: a.label,
+    url: a.href,
+  })),
+};
 
 const stats = [
   { label: "Books", value: books.length, href: "/books", icon: BookOpen },
@@ -14,6 +36,10 @@ const stats = [
 export default function Home() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(personLd) }}
+      />
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div

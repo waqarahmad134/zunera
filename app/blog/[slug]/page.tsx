@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { posts, categories } from "@/lib/data";
+import { posts, categories, site } from "@/lib/data";
 import { HeroText } from "@/components/motion";
+import { siteUrl } from "@/lib/seo";
 
 export function generateStaticParams() {
   return posts.map((p) => ({ slug: p.slug }));
@@ -17,7 +18,25 @@ export async function generateMetadata({
   const { slug } = await params;
   const post = posts.find((p) => p.slug === slug);
   if (!post) return { title: "Post not found" };
-  return { title: post.title, description: post.excerpt };
+  const image = post.image || site.portrait;
+  return {
+    title: post.title,
+    description: post.excerpt,
+    alternates: { canonical: `/blog/${post.slug}` },
+    openGraph: {
+      type: "article",
+      title: post.title,
+      description: post.excerpt,
+      publishedTime: post.date,
+      images: [{ url: image, alt: post.title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.excerpt,
+      images: [image],
+    },
+  };
 }
 
 function formatDate(iso: string) {
@@ -39,8 +58,24 @@ export default async function BlogPostPage({
 
   const category = categories.find((c) => c.slug === post.category);
 
+  const articleLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.excerpt,
+    datePublished: post.date,
+    image: `${siteUrl()}${post.image || site.portrait}`,
+    url: `${siteUrl()}/blog/${post.slug}`,
+    author: { "@type": "Person", name: site.name, url: siteUrl() },
+    ...(category ? { articleSection: category.name } : {}),
+  };
+
   return (
     <article className="mx-auto max-w-3xl px-5 sm:px-8 pt-16 sm:pt-24">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleLd) }}
+      />
       <HeroText>
         <Link
           href="/blog"

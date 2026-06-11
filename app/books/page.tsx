@@ -5,6 +5,7 @@ import PageHeader from "@/components/PageHeader";
 import { StaggerList, StaggerItem } from "@/components/motion";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/books" },
   title: "Book Projects",
   description: "Books authored and edited by Zunera.",
 };

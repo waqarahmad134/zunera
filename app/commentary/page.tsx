@@ -3,6 +3,7 @@ import PageHeader from "@/components/PageHeader";
 import CommentaryList from "@/components/CommentaryList";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/commentary" },
   title: "Commentary",
   description:
     "Opinion pieces and media interviews by Zunera in DAWN, The New York Times, BBC, Wired and more.",

@@ -1,8 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import { site } from "@/lib/data";
+import { siteUrl } from "@/lib/seo";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -15,13 +17,34 @@ const fraunces = Fraunces({
   axes: ["opsz"],
 });
 
+const DESCRIPTION =
+  "Zunera is an Associate Professor at the University of Warwick researching policing, urban insecurity, surveillance and cybercrime in the Global South.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl()),
   title: {
     default: "Zunera | Criminologist & Associate Professor",
     template: "%s | Zunera",
   },
-  description:
-    "Zunera is an Associate Professor at the University of Warwick researching policing, urban insecurity, surveillance and cybercrime in the Global South.",
+  description: DESCRIPTION,
+  openGraph: {
+    type: "website",
+    siteName: site.name,
+    title: "Zunera | Criminologist & Associate Professor",
+    description: DESCRIPTION,
+    images: [{ url: site.portrait, width: 720, height: 900, alt: site.name }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Zunera | Criminologist & Associate Professor",
+    description: DESCRIPTION,
+    images: [site.portrait],
+  },
+  robots: { index: true, follow: true },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#faf8f4",
 };
 
 export default function RootLayout({

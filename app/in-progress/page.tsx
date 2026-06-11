@@ -5,6 +5,7 @@ import PageHeader from "@/components/PageHeader";
 import { StaggerList, StaggerItem } from "@/components/motion";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/in-progress" },
   title: "In Progress",
   description: "Ongoing research projects by Zunera.",
 };

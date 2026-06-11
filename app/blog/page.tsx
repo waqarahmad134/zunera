@@ -3,6 +3,7 @@ import PageHeader from "@/components/PageHeader";
 import BlogList from "@/components/BlogList";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/blog" },
   title: "Blog",
   description:
     "Notes and reflections on policing, urban security and research in the Global South.",

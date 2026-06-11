@@ -5,6 +5,7 @@ import PubCard from "@/components/PubCard";
 import { StaggerList, StaggerItem } from "@/components/motion";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/policy" },
   title: "Policy",
   description:
     "Policy publications by Zunera for Carnegie Endowment, UCL and others.",

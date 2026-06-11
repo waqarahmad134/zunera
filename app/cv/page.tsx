@@ -5,6 +5,7 @@ import PageHeader from "@/components/PageHeader";
 import { Reveal } from "@/components/motion";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/cv" },
   title: "CV",
   description: "Curriculum vitae of Zunera, available upon request.",
 };
