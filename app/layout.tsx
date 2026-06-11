@@ -17,8 +17,8 @@ const fraunces = Fraunces({
 
 export const metadata: Metadata = {
   title: {
-    default: "Zunera — Criminologist & Associate Professor",
-    template: "%s — Zunera",
+    default: "Zunera | Criminologist & Associate Professor",
+    template: "%s | Zunera",
   },
   description:
     "Zunera is an Associate Professor at the University of Warwick researching policing, urban insecurity, surveillance and cybercrime in the Global South.",

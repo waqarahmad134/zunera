@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "zoha-dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "ulimit -n 61440; export WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true; exec npm run dev"],
       "port": 3000
     }
   ]

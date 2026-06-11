@@ -1,0 +1,22 @@
+[
+  {
+    "title": "Welcome to the Blog",
+    "slug": "welcome-to-the-blog",
+    "date": "2026-06-01",
+    "category": "research-notes",
+    "excerpt": "A new space for shorter reflections on policing, security and urban life, written between the longer projects.",
+    "content": "This blog is a space for shorter reflections that sit between formal publications: notes from fieldwork, thoughts on new policing debates, and updates on ongoing research.\n\nExpect posts on policing and technology, urban security in South Asia, and the questions that come up while teaching and writing.\n\nYou can browse posts by category, and the most recent pieces always appear first. Thank you for reading.",
+    "published": true,
+    "image": ""
+  },
+  {
+    "title": "Why Everyday Policing Deserves More Attention",
+    "slug": "why-everyday-policing-deserves-more-attention",
+    "date": "2026-06-08",
+    "category": "policing",
+    "excerpt": "Dramatic reforms make headlines, but most encounters between citizens and the police happen in routine, unremarkable moments.",
+    "content": "Public debate about policing tends to focus on dramatic moments: high-profile operations, scandals, and sweeping reform announcements.\n\nMost policing, however, happens in routine encounters. A complaint filed at a station desk, a checkpoint conversation, a patrol through a familiar neighbourhood. These small moments shape how citizens experience the state far more than any headline.\n\nTaking the everyday seriously changes the questions we ask. Instead of only asking whether a reform passed, we can ask how it lands in practice, who it reaches, and what informal routines grow around it.\n\nFuture posts will pick up specific examples from research in South Asian cities.",
+    "published": true,
+    "image": ""
+  }
+]

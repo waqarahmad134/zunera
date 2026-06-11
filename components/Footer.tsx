@@ -1,9 +1,15 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Mail } from "lucide-react";
 import { XIcon, LinkedInIcon } from "@/components/icons";
 import { site, navLinks } from "@/lib/data";
 
 export default function Footer() {
+  const pathname = usePathname();
+  if (pathname.startsWith("/admin")) return null;
+
   return (
     <footer className="border-t border-line bg-paper-soft/60 mt-24">
       <div className="mx-auto max-w-6xl px-5 sm:px-8 py-12 grid gap-10 sm:grid-cols-3">

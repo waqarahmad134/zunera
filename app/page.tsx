@@ -79,8 +79,8 @@ export default function Home() {
                 className="absolute -inset-3 rounded-[2rem] border border-accent/25 -rotate-2"
               />
               <Image
-                src="/portrait.webp"
-                alt="Portrait of Zunera"
+                src={site.portrait}
+                alt={`Portrait of ${site.name}`}
                 width={720}
                 height={900}
                 priority
@@ -246,8 +246,8 @@ export default function Home() {
               <p className="mt-4 text-paper/70 max-w-xl leading-relaxed">
                 {chapters.length} book chapters, {opinions.length} opinion pieces,{" "}
                 {interviews.length} media interviews and {policy.length} policy
-                publications — spanning DAWN, The New York Times, BBC, Carnegie
-                Endowment and more.
+                publications, spanning DAWN, The New York Times, BBC, the
+                Carnegie Endowment and more.
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
                 <Link

@@ -23,6 +23,8 @@ export default function Nav() {
     setOpen(false);
   }, [pathname]);
 
+  if (pathname.startsWith("/admin")) return null;
+
   return (
     <header
       className={`sticky top-0 z-50 transition-all duration-300 ${

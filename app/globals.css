@@ -31,3 +31,57 @@ body {
   background: var(--color-accent);
   color: var(--color-paper);
 }
+
+/* Blog post body (rendered markdown) */
+.prose-z {
+  color: var(--color-ink-soft);
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+.prose-z p {
+  margin-bottom: 1.25em;
+}
+.prose-z h2,
+.prose-z h3 {
+  font-family: var(--font-serif);
+  color: var(--color-ink);
+  margin-top: 1.8em;
+  margin-bottom: 0.6em;
+  line-height: 1.25;
+}
+.prose-z h2 {
+  font-size: 1.6rem;
+}
+.prose-z h3 {
+  font-size: 1.3rem;
+}
+.prose-z a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.prose-z a:hover {
+  color: var(--color-accent-deep);
+}
+.prose-z strong {
+  color: var(--color-ink);
+}
+.prose-z ul,
+.prose-z ol {
+  margin: 0 0 1.25em 1.4em;
+}
+.prose-z ul {
+  list-style: disc;
+}
+.prose-z ol {
+  list-style: decimal;
+}
+.prose-z li {
+  margin-bottom: 0.4em;
+}
+.prose-z blockquote {
+  border-left: 3px solid var(--color-accent);
+  padding-left: 1.2em;
+  font-style: italic;
+  margin-bottom: 1.25em;
+}

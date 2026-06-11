@@ -6,7 +6,7 @@ import { Reveal } from "@/components/motion";
 
 export const metadata: Metadata = {
   title: "CV",
-  description: "Curriculum vitae of Zunera — available upon request.",
+  description: "Curriculum vitae of Zunera, available upon request.",
 };
 
 export default function CVPage() {
@@ -21,8 +21,8 @@ export default function CVPage() {
         <Reveal>
           <div className="rounded-3xl border border-line bg-paper-soft/70 p-8 sm:p-12 max-w-2xl">
             <p className="text-ink-soft leading-relaxed">
-              For a copy of my CV — including positions, education, grants and
-              the full list of publications — please get in touch by email.
+              For a copy of my CV, including positions, education, grants and
+              the full list of publications, please get in touch by email.
             </p>
             <a
               href={`mailto:${site.email.personal}`}
