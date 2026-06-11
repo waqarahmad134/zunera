@@ -8,6 +8,7 @@ import {
   Plus, Save, Trash2, TriangleAlert, Wand2, X,
 } from "lucide-react";
 import AdminShell from "@/components/admin/AdminShell";
+import RichTextEditor from "@/components/admin/RichTextEditor";
 import { getSection, type Field } from "@/lib/adminConfig";
 
 type Item = Record<string, unknown>;
@@ -130,6 +131,11 @@ function FieldInput({
       <ImageInput value={String(value ?? "")} onChange={(v) => onChange(v)} />
     );
   }
+  if (field.type === "richtext") {
+    return (
+      <RichTextEditor value={String(value ?? "")} onChange={(v) => onChange(v)} />
+    );
+  }
   if (field.type === "textarea") {
     const isLong = field.key === "content";
     return (
@@ -245,7 +251,8 @@ function ItemForm({
           f.type === "textarea" ||
           f.key === "title" ||
           f.type === "tags" ||
-          f.type === "image";
+          f.type === "image" ||
+          f.type === "richtext";
         return (
           <div key={f.key} className={wide ? "sm:col-span-2" : undefined}>
             <label className="block text-xs font-semibold tracking-wide uppercase text-ink-soft mb-1.5">

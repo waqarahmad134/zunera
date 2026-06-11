@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import ReactMarkdown from "react-markdown";
 import { ArrowLeft } from "lucide-react";
 import { posts, categories } from "@/lib/data";
 import { HeroText } from "@/components/motion";
@@ -74,9 +73,11 @@ export default async function BlogPostPage({
         </HeroText>
       )}
       <HeroText delay={0.22}>
-        <div className="prose-z mt-9">
-          <ReactMarkdown>{post.content}</ReactMarkdown>
-        </div>
+        {/* Content is authored only by the authenticated admin editor. */}
+        <div
+          className="prose-z mt-9"
+          dangerouslySetInnerHTML={{ __html: post.content }}
+        />
       </HeroText>
     </article>
   );

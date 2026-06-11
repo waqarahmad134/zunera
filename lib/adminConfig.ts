@@ -8,7 +8,8 @@ export type FieldType =
   | "tags"
   | "select"
   | "slug"
-  | "image";
+  | "image"
+  | "richtext";
 
 export interface Field {
   key: string;
@@ -202,8 +203,8 @@ export const SECTIONS: SectionDef[] = [
       {
         key: "content",
         label: "Content",
-        type: "textarea",
-        help: "Plain paragraphs separated by blank lines. **bold**, *italic* and [links](https://...) are supported.",
+        type: "richtext",
+        help: "Use the toolbar for bold, headings, lists, links and images.",
       },
       { key: "published", label: "Published", type: "checkbox" },
     ],
