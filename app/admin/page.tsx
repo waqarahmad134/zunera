@@ -4,13 +4,14 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   BookOpen, FileText, Library, FlaskConical, PenLine, Mic, Landmark,
-  User, Building2, Tags, Newspaper, ChevronRight,
+  User, Building2, Tags, Newspaper, ChevronRight, Images, Search,
 } from "lucide-react";
 import AdminShell from "@/components/admin/AdminShell";
 import { SECTIONS } from "@/lib/adminConfig";
 
 const ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
   site: User,
+  seo: Search,
   affiliations: Building2,
   books: BookOpen,
   papers: FileText,
@@ -73,6 +74,24 @@ export default function AdminDashboard() {
             </Link>
           );
         })}
+        <Link
+          href="/admin/media"
+          className="group flex items-start gap-4 rounded-2xl border border-line bg-white/70 p-5 transition-all duration-200 hover:border-accent/40 hover:bg-white hover:shadow-[0_8px_30px_rgba(154,74,42,0.08)]"
+        >
+          <span className="rounded-full bg-accent-soft p-2.5 text-accent shrink-0">
+            <Images size={17} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="font-medium text-sm">Media</span>
+            <span className="mt-1 block text-xs text-ink-soft leading-relaxed">
+              All uploaded images: preview, copy links and delete.
+            </span>
+          </span>
+          <ChevronRight
+            size={16}
+            className="shrink-0 self-center text-line group-hover:text-accent transition-colors"
+          />
+        </Link>
       </div>
     </AdminShell>
   );

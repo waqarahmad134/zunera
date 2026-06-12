@@ -5,6 +5,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { site } from "@/lib/data";
 import { siteUrl } from "@/lib/seo";
+import seo from "@/content/seo.json";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -17,30 +18,33 @@ const fraunces = Fraunces({
   axes: ["opsz"],
 });
 
-const DESCRIPTION =
-  "Zunera is an Associate Professor at the University of Warwick researching policing, urban insecurity, surveillance and cybercrime in the Global South.";
+const ogImage = seo.ogImage || site.portrait;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: {
-    default: "Zunera | Criminologist & Associate Professor",
-    template: "%s | Zunera",
+    default: seo.defaultTitle,
+    template: `%s | ${seo.brandName}`,
   },
-  description: DESCRIPTION,
+  description: seo.description,
+  keywords: seo.keywords,
   openGraph: {
     type: "website",
-    siteName: site.name,
-    title: "Zunera | Criminologist & Associate Professor",
-    description: DESCRIPTION,
-    images: [{ url: site.portrait, width: 720, height: 900, alt: site.name }],
+    siteName: seo.brandName,
+    title: seo.defaultTitle,
+    description: seo.description,
+    images: [{ url: ogImage, alt: seo.brandName }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Zunera | Criminologist & Associate Professor",
-    description: DESCRIPTION,
-    images: [site.portrait],
+    title: seo.defaultTitle,
+    description: seo.description,
+    images: [ogImage],
   },
   robots: { index: true, follow: true },
+  ...(seo.googleVerification
+    ? { verification: { google: seo.googleVerification } }
+    : {}),
 };
 
 export const viewport: Viewport = {

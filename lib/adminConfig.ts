@@ -66,6 +66,51 @@ export const SECTIONS: SectionDef[] = [
     ],
   },
   {
+    slug: "seo",
+    label: "SEO",
+    description: "Search engine titles, description, share image and keywords.",
+    singleton: true,
+    itemTitleKey: "defaultTitle",
+    fields: [
+      {
+        key: "defaultTitle",
+        label: "Site title",
+        type: "text",
+        help: "Shown in Google results and the browser tab for the homepage.",
+      },
+      {
+        key: "brandName",
+        label: "Brand name",
+        type: "text",
+        help: "Appended to inner page titles, e.g. \"Papers | Brand\".",
+      },
+      {
+        key: "description",
+        label: "Site description",
+        type: "textarea",
+        help: "The summary search engines show under the title. Aim for 150 to 160 characters.",
+      },
+      {
+        key: "ogImage",
+        label: "Social share image",
+        type: "image",
+        help: "Shown when the site is shared on WhatsApp, LinkedIn, X and similar.",
+      },
+      {
+        key: "keywords",
+        label: "Keywords",
+        type: "tags",
+        help: "Separate with commas.",
+      },
+      {
+        key: "googleVerification",
+        label: "Google verification code",
+        type: "text",
+        help: "Optional. The content value from Google Search Console's HTML tag verification.",
+      },
+    ],
+  },
+  {
     slug: "affiliations",
     label: "Affiliations",
     description: "Organisations shown on the homepage.",
