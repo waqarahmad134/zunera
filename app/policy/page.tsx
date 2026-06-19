@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { policy } from "@/lib/data";
+import { policy, isComingSoon } from "@/lib/data";
 import PageHeader from "@/components/PageHeader";
 import PubCard from "@/components/PubCard";
 import { StaggerList, StaggerItem } from "@/components/motion";
+import ComingSoon from "@/components/ComingSoon";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/policy" },
@@ -12,6 +13,8 @@ export const metadata: Metadata = {
 };
 
 export default function PolicyPage() {
+  if (isComingSoon("policy")) return <ComingSoon title="Policy" />;
+
   return (
     <>
       <PageHeader

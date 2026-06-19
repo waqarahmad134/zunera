@@ -9,6 +9,13 @@ import interviewsJson from "@/content/interviews.json";
 import policyJson from "@/content/policy.json";
 import categoriesJson from "@/content/categories.json";
 import postsJson from "@/content/posts.json";
+import pagesJson from "@/content/pages.json";
+
+export const pages: Record<string, boolean> = pagesJson;
+
+export function isComingSoon(slug: string): boolean {
+  return Boolean(pages[slug]);
+}
 
 export const site = {
   name: siteJson.name,

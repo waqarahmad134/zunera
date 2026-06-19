@@ -8,6 +8,11 @@ import {
   Bold, Italic, Underline as UnderlineIcon, Heading2, Heading3, List,
   ListOrdered, Quote, Link2, Link2Off, ImagePlus, Undo2, Redo2, Loader2,
 } from "lucide-react";
+import {
+  ACCEPTED_IMAGE_TYPES,
+  fileToDataUrl,
+  imageSizeError,
+} from "@/lib/clientImages";
 
 function ToolbarButton({
   onClick,
@@ -70,18 +75,22 @@ export default function RichTextEditor({
     },
   });
 
-  async function uploadImage(file: File) {
-    setUploading(true);
+  async function addImage(file: File) {
     setError("");
-    const form = new FormData();
-    form.append("file", file);
-    const res = await fetch("/api/admin/upload", { method: "POST", body: form });
-    const body = await res.json().catch(() => ({}));
-    setUploading(false);
-    if (res.ok && body.url) {
-      editor?.chain().focus().setImage({ src: body.url }).run();
-    } else {
-      setError(body.error || "Image upload failed.");
+    const sizeError = imageSizeError(file);
+    if (sizeError) {
+      setError(sizeError);
+      return;
+    }
+    setUploading(true);
+    try {
+      // Insert as a local preview; the actual upload happens on Save.
+      const dataUrl = await fileToDataUrl(file);
+      editor?.chain().focus().setImage({ src: dataUrl }).run();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not read the image.");
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -202,11 +211,11 @@ export default function RichTextEditor({
         <input
           ref={fileRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+          accept={ACCEPTED_IMAGE_TYPES}
           className="hidden"
           onChange={(e) => {
             const f = e.target.files?.[0];
-            if (f) uploadImage(f);
+            if (f) addImage(f);
             e.target.value = "";
           }}
         />

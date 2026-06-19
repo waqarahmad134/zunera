@@ -10,6 +10,13 @@ import {
 import AdminShell from "@/components/admin/AdminShell";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import { getSection, type Field } from "@/lib/adminConfig";
+import {
+  ACCEPTED_IMAGE_TYPES,
+  countStagedImages,
+  fileToDataUrl,
+  imageSizeError,
+  resolveStagedImages,
+} from "@/lib/clientImages";
 
 type Item = Record<string, unknown>;
 type Option = { value: string; label: string };
@@ -41,19 +48,21 @@ function ImageInput({
   value: string;
   onChange: (v: string) => void;
 }) {
-  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const staged = value.startsWith("data:");
 
-  async function upload(file: File) {
-    setUploading(true);
+  async function stage(file: File) {
     setError("");
-    const form = new FormData();
-    form.append("file", file);
-    const res = await fetch("/api/admin/upload", { method: "POST", body: form });
-    const body = await res.json().catch(() => ({}));
-    setUploading(false);
-    if (res.ok && body.url) onChange(body.url);
-    else setError(body.error || "Upload failed.");
+    const sizeError = imageSizeError(file);
+    if (sizeError) {
+      setError(sizeError);
+      return;
+    }
+    try {
+      onChange(await fileToDataUrl(file));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not read the image.");
+    }
   }
 
   return (
@@ -83,26 +92,28 @@ function ImageInput({
         )}
         <div className="min-w-0">
           <label className="inline-flex items-center gap-2 rounded-xl border border-line px-4 py-2.5 text-sm text-ink-soft cursor-pointer hover:border-accent hover:text-accent transition-colors">
-            {uploading ? (
-              <Loader2 size={14} className="animate-spin" />
-            ) : (
-              <ImagePlus size={14} />
-            )}
-            {uploading ? "Uploading..." : value ? "Replace image" : "Upload image"}
+            <ImagePlus size={14} />
+            {value ? "Replace image" : "Choose image"}
             <input
               type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+              accept={ACCEPTED_IMAGE_TYPES}
               className="hidden"
               onChange={(e) => {
                 const f = e.target.files?.[0];
-                if (f) upload(f);
+                if (f) stage(f);
                 e.target.value = "";
               }}
             />
           </label>
-          <p className="mt-2 text-xs text-ink-soft/80">
-            JPG, PNG, WebP, GIF or AVIF. Max 4 MB.
-          </p>
+          {staged ? (
+            <p className="mt-2 text-xs text-accent">
+              Ready to upload when you click Save.
+            </p>
+          ) : (
+            <p className="mt-2 text-xs text-ink-soft/80">
+              JPG, PNG, WebP, GIF or AVIF. Max 4 MB.
+            </p>
+          )}
           {error && <p className="mt-1.5 text-xs text-red-600">{error}</p>}
         </div>
       </div>
@@ -158,7 +169,11 @@ function FieldInput({
           className="size-4 accent-[#9a4a2a]"
         />
         <span className="text-sm text-ink-soft">
-          {Boolean(value) ? "Visible on the website" : "Hidden (draft)"}
+          {field.checkboxLabel
+            ? field.checkboxLabel
+            : Boolean(value)
+              ? "Visible on the website"
+              : "Hidden (draft)"}
         </span>
       </label>
     );
@@ -339,24 +354,41 @@ export default function SectionEditorPage() {
   async function save() {
     setSaving(true);
     setMsg(null);
-    const res = await fetch("/api/admin/content", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ section: def!.slug, data }),
-    });
-    const body = await res.json().catch(() => ({}));
-    setSaving(false);
-    if (res.ok) {
-      setDirty(false);
-      setMsg({
-        ok: true,
-        text:
-          body.mode === "github"
-            ? "Saved. The website rebuilds now and updates in about a minute."
-            : "Saved.",
+    try {
+      // Upload any images that were staged as local previews, then save the
+      // content with their committed URLs in a single step.
+      const pending = countStagedImages(data);
+      if (pending > 0) {
+        setMsg({
+          ok: true,
+          text: `Uploading ${pending} image${pending > 1 ? "s" : ""}...`,
+        });
+      }
+      const resolved = await resolveStagedImages(data);
+      if (resolved !== data) setData(resolved);
+
+      const res = await fetch("/api/admin/content", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ section: def!.slug, data: resolved }),
       });
-    } else {
-      setMsg({ ok: false, text: body.error || "Save failed." });
+      const body = await res.json().catch(() => ({}));
+      setSaving(false);
+      if (res.ok) {
+        setDirty(false);
+        setMsg({
+          ok: true,
+          text:
+            body.mode === "github"
+              ? "Saved. The website rebuilds now and updates in about a minute."
+              : "Saved.",
+        });
+      } else {
+        setMsg({ ok: false, text: body.error || "Save failed." });
+      }
+    } catch (e) {
+      setSaving(false);
+      setMsg({ ok: false, text: e instanceof Error ? e.message : "Save failed." });
     }
   }
 

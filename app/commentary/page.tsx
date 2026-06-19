@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import PageHeader from "@/components/PageHeader";
 import CommentaryList from "@/components/CommentaryList";
+import ComingSoon from "@/components/ComingSoon";
+import { isComingSoon } from "@/lib/data";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/commentary" },
@@ -10,6 +12,8 @@ export const metadata: Metadata = {
 };
 
 export default function CommentaryPage() {
+  if (isComingSoon("commentary")) return <ComingSoon title="Commentary" />;
+
   return (
     <>
       <PageHeader

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { ArrowUpRight } from "lucide-react";
-import { books } from "@/lib/data";
+import { books, isComingSoon } from "@/lib/data";
 import PageHeader from "@/components/PageHeader";
 import { StaggerList, StaggerItem } from "@/components/motion";
+import ComingSoon from "@/components/ComingSoon";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/books" },
@@ -11,6 +12,8 @@ export const metadata: Metadata = {
 };
 
 export default function BooksPage() {
+  if (isComingSoon("books")) return <ComingSoon title="Books" />;
+
   return (
     <>
       <PageHeader

@@ -4,13 +4,14 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   BookOpen, FileText, Library, FlaskConical, PenLine, Mic, Landmark,
-  User, Building2, Tags, Newspaper, ChevronRight, Images, Search,
+  User, Building2, Tags, Newspaper, ChevronRight, Images, Search, EyeOff,
 } from "lucide-react";
 import AdminShell from "@/components/admin/AdminShell";
 import { SECTIONS } from "@/lib/adminConfig";
 
 const ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
   site: User,
+  pages: EyeOff,
   seo: Search,
   affiliations: Building2,
   books: BookOpen,

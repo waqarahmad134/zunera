@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { papers } from "@/lib/data";
+import { papers, isComingSoon } from "@/lib/data";
 import PageHeader from "@/components/PageHeader";
 import PubCard from "@/components/PubCard";
 import { StaggerList, StaggerItem } from "@/components/motion";
+import ComingSoon from "@/components/ComingSoon";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/papers" },
@@ -11,6 +12,8 @@ export const metadata: Metadata = {
 };
 
 export default function PapersPage() {
+  if (isComingSoon("papers")) return <ComingSoon title="Papers" />;
+
   return (
     <>
       <PageHeader

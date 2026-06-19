@@ -22,6 +22,8 @@ export interface Field {
   optionLabel?: string;
   placeholder?: string;
   help?: string;
+  /** Custom label shown next to a checkbox (overrides the default visible/hidden text). */
+  checkboxLabel?: string;
 }
 
 export interface SectionDef {
@@ -63,6 +65,23 @@ export const SECTIONS: SectionDef[] = [
         type: "tags",
         help: "Separate with commas.",
       },
+    ],
+  },
+  {
+    slug: "pages",
+    label: "Page Visibility",
+    description:
+      "Switch a page to a \"Coming soon\" placeholder until you have content to show there.",
+    singleton: true,
+    itemTitleKey: "blog",
+    fields: [
+      { key: "blog", label: "Blog", type: "checkbox", checkboxLabel: "Show \"Coming soon\" instead of the Blog page" },
+      { key: "books", label: "Books", type: "checkbox", checkboxLabel: "Show \"Coming soon\" instead of the Books page" },
+      { key: "papers", label: "Papers", type: "checkbox", checkboxLabel: "Show \"Coming soon\" instead of the Papers page" },
+      { key: "chapters", label: "Book Chapters", type: "checkbox", checkboxLabel: "Show \"Coming soon\" instead of the Chapters page" },
+      { key: "in-progress", label: "In Progress", type: "checkbox", checkboxLabel: "Show \"Coming soon\" instead of the In Progress page" },
+      { key: "commentary", label: "Commentary", type: "checkbox", checkboxLabel: "Show \"Coming soon\" instead of the Commentary page" },
+      { key: "policy", label: "Policy", type: "checkbox", checkboxLabel: "Show \"Coming soon\" instead of the Policy page" },
     ],
   },
   {

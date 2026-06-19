@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { FlaskConical } from "lucide-react";
-import { inProgress } from "@/lib/data";
+import { inProgress, isComingSoon } from "@/lib/data";
 import PageHeader from "@/components/PageHeader";
 import { StaggerList, StaggerItem } from "@/components/motion";
+import ComingSoon from "@/components/ComingSoon";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/in-progress" },
@@ -11,6 +12,8 @@ export const metadata: Metadata = {
 };
 
 export default function InProgressPage() {
+  if (isComingSoon("in-progress")) return <ComingSoon title="In Progress" />;
+
   return (
     <>
       <PageHeader
