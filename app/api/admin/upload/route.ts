@@ -1,6 +1,10 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { NextRequest, NextResponse } from "next/server";
+import { getEnv } from "@/lib/cf";
+
+// Image uploads are stored in Cloudflare R2 under the `uploads/` prefix and
+// served back through the /uploads/[...] route handler. The returned URL stays
+// `/uploads/<name>`, so stored content references are origin-relative and
+// portable.
 
 const ALLOWED: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -9,47 +13,17 @@ const ALLOWED: Record<string, string> = {
   "image/gif": "gif",
   "image/avif": "avif",
 };
-const MAX_BYTES = 4 * 1024 * 1024; // keep under Vercel's request body limit
+const MAX_BYTES = 10 * 1024 * 1024; // R2 has no small request-body limit
 
 function safeName(original: string, ext: string) {
-  const base = original
-    .replace(/\.[^.]+$/, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 40) || "image";
+  const base =
+    original
+      .replace(/\.[^.]+$/, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40) || "image";
   return `${base}-${Date.now()}.${ext}`;
-}
-
-async function commitToGitHub(relPath: string, bytes: Buffer) {
-  const repo = process.env.GITHUB_REPO;
-  const token = process.env.GITHUB_TOKEN;
-  const branch = process.env.GITHUB_BRANCH || "main";
-  if (!repo || !token) {
-    throw new Error(
-      "Uploading in production needs the GITHUB_TOKEN and GITHUB_REPO environment variables (set them in Vercel project settings)."
-    );
-  }
-  const res = await fetch(
-    `https://api.github.com/repos/${repo}/contents/${relPath}`,
-    {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/vnd.github+json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        message: `content: upload ${relPath} via admin panel`,
-        content: bytes.toString("base64"),
-        branch,
-      }),
-    }
-  );
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`GitHub upload failed (${res.status}): ${body.slice(0, 200)}`);
-  }
 }
 
 export async function POST(req: NextRequest) {
@@ -68,24 +42,21 @@ export async function POST(req: NextRequest) {
     }
     if (file.size > MAX_BYTES) {
       return NextResponse.json(
-        { error: "Image is too large (max 4 MB). Please resize it first." },
+        { error: "Image is too large (max 10 MB). Please resize it first." },
         { status: 400 }
       );
     }
 
-    const bytes = Buffer.from(await file.arrayBuffer());
+    const bytes = await file.arrayBuffer();
     const name = safeName(file.name, ext);
-    const relPath = `public/uploads/${name}`;
+    const key = `uploads/${name}`;
 
-    if (process.env.NODE_ENV !== "production") {
-      const dir = path.join(process.cwd(), "public", "uploads");
-      await fs.mkdir(dir, { recursive: true });
-      await fs.writeFile(path.join(dir, name), bytes);
-      return NextResponse.json({ ok: true, url: `/uploads/${name}`, mode: "local" });
-    }
+    const env = await getEnv();
+    await env.MEDIA.put(key, bytes, {
+      httpMetadata: { contentType: file.type },
+    });
 
-    await commitToGitHub(relPath, bytes);
-    return NextResponse.json({ ok: true, url: `/uploads/${name}`, mode: "github" });
+    return NextResponse.json({ ok: true, url: `/uploads/${name}`, mode: "r2" });
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Upload failed" },

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Mail } from "lucide-react";
-import { site } from "@/lib/data";
+import { getSite } from "@/lib/content";
 import PageHeader from "@/components/PageHeader";
 import { Reveal } from "@/components/motion";
 
@@ -10,7 +10,8 @@ export const metadata: Metadata = {
   description: "Curriculum vitae of Zunera, available upon request.",
 };
 
-export default function CVPage() {
+export default async function CVPage() {
+  const site = await getSite();
   return (
     <>
       <PageHeader

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import PageHeader from "@/components/PageHeader";
 import BlogList from "@/components/BlogList";
 import ComingSoon from "@/components/ComingSoon";
-import { isComingSoon } from "@/lib/data";
+import { getCategories, getPosts, isComingSoon } from "@/lib/content";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/blog" },
@@ -11,8 +11,9 @@ export const metadata: Metadata = {
     "Notes and reflections on policing, urban security and research in the Global South.",
 };
 
-export default function BlogPage() {
-  if (isComingSoon("blog")) return <ComingSoon title="Blog" />;
+export default async function BlogPage() {
+  if (await isComingSoon("blog")) return <ComingSoon title="Blog" />;
+  const [posts, categories] = await Promise.all([getPosts(), getCategories()]);
 
   return (
     <>
@@ -22,7 +23,7 @@ export default function BlogPage() {
         description="Shorter pieces written between the longer projects: fieldwork notes, reading reflections and research updates."
       />
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <BlogList />
+        <BlogList posts={posts} categories={categories} />
       </div>
     </>
   );

@@ -1,9 +1,13 @@
 import type { MetadataRoute } from "next";
-import { posts, isComingSoon } from "@/lib/data";
+import { getPages, getPosts } from "@/lib/content";
 import { siteUrl } from "@/lib/seo";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export const dynamic = "force-dynamic";
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteUrl();
+  const [pages, posts] = await Promise.all([getPages(), getPosts()]);
+  const comingSoon = (slug: string) => Boolean(pages[slug]);
 
   // Routes tied to a toggleable section; excluded while "Coming soon".
   const sectionRoutes = [
@@ -14,7 +18,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { slug: "commentary", priority: 0.8 },
     { slug: "policy", priority: 0.8 },
     { slug: "blog", priority: 0.8 },
-  ].filter((r) => !isComingSoon(r.slug));
+  ].filter((r) => !comingSoon(r.slug));
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${base}/`, priority: 1 },
@@ -24,7 +28,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   // Individual posts only when the Blog itself is live.
-  const postRoutes: MetadataRoute.Sitemap = isComingSoon("blog")
+  const postRoutes: MetadataRoute.Sitemap = comingSoon("blog")
     ? []
     : posts.map((p) => ({
         url: `${base}/blog/${p.slug}`,

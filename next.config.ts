@@ -1,19 +1,18 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Local-only: keep production builds in a separate folder so running
-  // `npm run build` can never corrupt the dev server's cache (which caused
-  // random 404s). On Vercel the default .next must be used.
-  distDir: process.env.VERCEL
-    ? ".next"
-    : process.env.NODE_ENV === "production"
-      ? ".next-prod"
-      : ".next",
-  // The admin content API reads content/*.json with fs at runtime; make sure
-  // those files ship with the serverless function on Vercel.
-  outputFileTracingIncludes: {
-    "/api/admin/content": ["./content/**/*"],
+  // Images are served either from /public (portrait) or from R2 via the
+  // /uploads/[...] route handler, using plain <img>/<Image unoptimized>.
+  // Skipping the optimizer keeps image delivery simple on Workers.
+  images: {
+    unoptimized: true,
   },
 };
 
 export default nextConfig;
+
+// Wire up the Cloudflare bindings (D1, R2) so that `getCloudflareContext()`
+// works while running `next dev`, using the local Miniflare simulators
+// configured in wrangler.jsonc.
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
+initOpenNextCloudflareForDev();

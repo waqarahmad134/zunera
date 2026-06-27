@@ -1,0 +1,35 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "zunera",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-03-25",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "binding": "ASSETS",
+    "directory": ".open-next/assets"
+  },
+  "observability": {
+    "enabled": true
+  },
+  // Cloudflare D1 — the SQL content store. Create it once with
+  //   wrangler d1 create zunera-content
+  // then paste the printed database_id below.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "zunera-content",
+      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID",
+      "migrations_dir": "migrations"
+    }
+  ],
+  // Cloudflare R2 — image/media storage. Create it once with
+  //   wrangler r2 bucket create zunera-media
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "zunera-media"
+    }
+  ]
+  // ADMIN_PASSWORD is a secret, not a var. Set it with:
+  //   wrangler secret put ADMIN_PASSWORD
+}

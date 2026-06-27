@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Mail, ArrowUpRight } from "lucide-react";
 import { XIcon, LinkedInIcon } from "@/components/icons";
-import { site } from "@/lib/data";
+import { getSite } from "@/lib/content";
 import PageHeader from "@/components/PageHeader";
 import { StaggerList, StaggerItem } from "@/components/motion";
 
@@ -11,34 +11,36 @@ export const metadata: Metadata = {
   description: "Get in touch with Zunera.",
 };
 
-const channels = [
-  {
-    icon: Mail,
-    label: "Academic email",
-    value: site.email.academic,
-    href: `mailto:${site.email.academic}`,
-  },
-  {
-    icon: Mail,
-    label: "Personal email",
-    value: site.email.personal,
-    href: `mailto:${site.email.personal}`,
-  },
-  {
-    icon: XIcon,
-    label: "Twitter / X",
-    value: "@ZohaWaseem",
-    href: site.socials.twitter,
-  },
-  {
-    icon: LinkedInIcon,
-    label: "LinkedIn",
-    value: "in/zohawaseem",
-    href: site.socials.linkedin,
-  },
-];
+export default async function ContactPage() {
+  const site = await getSite();
 
-export default function ContactPage() {
+  const channels = [
+    {
+      icon: Mail,
+      label: "Academic email",
+      value: site.email.academic,
+      href: `mailto:${site.email.academic}`,
+    },
+    {
+      icon: Mail,
+      label: "Personal email",
+      value: site.email.personal,
+      href: `mailto:${site.email.personal}`,
+    },
+    {
+      icon: XIcon,
+      label: "Twitter / X",
+      value: "@ZohaWaseem",
+      href: site.socials.twitter,
+    },
+    {
+      icon: LinkedInIcon,
+      label: "LinkedIn",
+      value: "in/zohawaseem",
+      href: site.socials.linkedin,
+    },
+  ];
+
   return (
     <>
       <PageHeader

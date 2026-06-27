@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight } from "lucide-react";
-import { posts, categories } from "@/lib/data";
+import type { Category, Post } from "@/lib/data";
 
 function formatDate(iso: string) {
   const d = new Date(iso + "T00:00:00");
@@ -15,16 +15,22 @@ function formatDate(iso: string) {
   });
 }
 
-export default function BlogList() {
+export default function BlogList({
+  posts,
+  categories,
+}: {
+  posts: Post[];
+  categories: Category[];
+}) {
   const [cat, setCat] = useState<string>("all");
 
   const usedCategories = useMemo(
     () => categories.filter((c) => posts.some((p) => p.category === c.slug)),
-    []
+    [categories, posts]
   );
   const visible = useMemo(
     () => (cat === "all" ? posts : posts.filter((p) => p.category === cat)),
-    [cat]
+    [cat, posts]
   );
 
   const catName = (slug: string) =>

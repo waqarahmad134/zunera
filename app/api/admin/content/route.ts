@@ -1,65 +1,29 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { NextRequest, NextResponse } from "next/server";
 import { getSection } from "@/lib/adminConfig";
+import { readSection, readSingleton, writeSection } from "@/lib/db";
 
-const CONTENT_DIR = path.join(process.cwd(), "content");
-
-function filePathFor(section: string) {
-  return path.join(CONTENT_DIR, `${section}.json`);
-}
+// Content is stored in Cloudflare D1. Reads/writes go straight to the database
+// in every environment (local dev uses the Miniflare D1 simulator), so there is
+// no longer a dev-vs-prod split or a GitHub commit step.
 
 export async function GET(req: NextRequest) {
   const section = req.nextUrl.searchParams.get("section") ?? "";
-  if (!getSection(section)) {
+  const def = getSection(section);
+  if (!def) {
     return NextResponse.json({ error: "Unknown section" }, { status: 400 });
   }
   try {
-    const raw = await fs.readFile(filePathFor(section), "utf8");
-    return NextResponse.json({ data: JSON.parse(raw) });
-  } catch {
-    return NextResponse.json({ error: "Could not read content" }, { status: 500 });
-  }
-}
-
-async function commitToGitHub(section: string, json: string) {
-  const repo = process.env.GITHUB_REPO;
-  const token = process.env.GITHUB_TOKEN;
-  const branch = process.env.GITHUB_BRANCH || "main";
-  if (!repo || !token) {
-    throw new Error(
-      "Saving in production needs the GITHUB_TOKEN and GITHUB_REPO environment variables (set them in Vercel project settings)."
+    if (def.singleton) {
+      const data = await readSingleton<Record<string, unknown>>(section, {});
+      return NextResponse.json({ data });
+    }
+    const data = await readSection(section);
+    return NextResponse.json({ data });
+  } catch (e) {
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "Could not read content" },
+      { status: 500 }
     );
-  }
-
-  const apiUrl = `https://api.github.com/repos/${repo}/contents/content/${section}.json`;
-  const headers = {
-    Authorization: `Bearer ${token}`,
-    Accept: "application/vnd.github+json",
-    "Content-Type": "application/json",
-  };
-
-  const current = await fetch(`${apiUrl}?ref=${branch}`, { headers });
-  let sha: string | undefined;
-  if (current.ok) {
-    sha = (await current.json()).sha;
-  } else if (current.status !== 404) {
-    throw new Error(`GitHub read failed (${current.status})`);
-  }
-
-  const res = await fetch(apiUrl, {
-    method: "PUT",
-    headers,
-    body: JSON.stringify({
-      message: `content: update ${section} via admin panel`,
-      content: Buffer.from(json, "utf8").toString("base64"),
-      branch,
-      ...(sha ? { sha } : {}),
-    }),
-  });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`GitHub save failed (${res.status}): ${body.slice(0, 200)}`);
   }
 }
 
@@ -74,15 +38,10 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Wrong data shape" }, { status: 400 });
   }
 
-  const json = JSON.stringify(body.data, null, 2) + "\n";
-
   try {
-    if (process.env.NODE_ENV !== "production") {
-      await fs.writeFile(filePathFor(section), json, "utf8");
-      return NextResponse.json({ ok: true, mode: "local" });
-    }
-    await commitToGitHub(section, json);
-    return NextResponse.json({ ok: true, mode: "github" });
+    const items = def.singleton ? [body.data] : (body.data as unknown[]);
+    await writeSection(section, items);
+    return NextResponse.json({ ok: true, mode: "d1" });
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Save failed" },

@@ -378,10 +378,7 @@ export default function SectionEditorPage() {
         setDirty(false);
         setMsg({
           ok: true,
-          text:
-            body.mode === "github"
-              ? "Saved. The website rebuilds now and updates in about a minute."
-              : "Saved.",
+          text: "Saved. Changes are live on the website immediately.",
         });
       } else {
         setMsg({ ok: false, text: body.error || "Save failed." });

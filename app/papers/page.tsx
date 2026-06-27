@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { papers, isComingSoon } from "@/lib/data";
+import { getPapers, isComingSoon } from "@/lib/content";
 import PageHeader from "@/components/PageHeader";
 import PubCard from "@/components/PubCard";
 import { StaggerList, StaggerItem } from "@/components/motion";
@@ -11,8 +11,9 @@ export const metadata: Metadata = {
   description: "Peer-reviewed journal articles by Zunera.",
 };
 
-export default function PapersPage() {
-  if (isComingSoon("papers")) return <ComingSoon title="Papers" />;
+export default async function PapersPage() {
+  if (await isComingSoon("papers")) return <ComingSoon title="Papers" />;
+  const papers = await getPapers();
 
   return (
     <>
