@@ -16,8 +16,13 @@ export async function GET(
     return new Response("Not found", { status: 404 });
   }
 
+  // Set headers from the object's stored metadata directly. (We avoid
+  // R2Object.writeHttpMetadata here because it expects the workers-types
+  // Headers, which clashes with the DOM Headers type under tsc.)
   const headers = new Headers();
-  object.writeHttpMetadata(headers);
+  if (object.httpMetadata?.contentType) {
+    headers.set("Content-Type", object.httpMetadata.contentType);
+  }
   headers.set("etag", object.httpEtag);
   headers.set("Cache-Control", "public, max-age=31536000, immutable");
 
