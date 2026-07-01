@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { navLinks } from "@/lib/data";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Nav() {
   const pathname = usePathname();
@@ -41,41 +42,45 @@ export default function Nav() {
           Zunera
         </Link>
 
-        {/* Desktop */}
-        <ul className="hidden lg:flex items-center gap-1">
-          {navLinks.map((link) => {
-            const active = pathname === link.href;
-            return (
-              <li key={link.href} className="relative">
-                <Link
-                  href={link.href}
-                  className={`px-3 py-2 text-sm transition-colors ${
-                    active ? "text-accent" : "text-ink-soft hover:text-ink"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-                {active && (
-                  <motion.span
-                    layoutId="nav-underline"
-                    className="absolute left-3 right-3 -bottom-px h-0.5 bg-accent rounded-full"
-                    transition={{ type: "spring", stiffness: 400, damping: 32 }}
-                  />
-                )}
-              </li>
-            );
-          })}
-        </ul>
+        <div className="flex items-center gap-2">
+          {/* Desktop */}
+          <ul className="hidden lg:flex items-center gap-1">
+            {navLinks.map((link) => {
+              const active = pathname === link.href;
+              return (
+                <li key={link.href} className="relative">
+                  <Link
+                    href={link.href}
+                    className={`px-3 py-2 text-sm transition-colors ${
+                      active ? "text-accent" : "text-ink-soft hover:text-ink"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                  {active && (
+                    <motion.span
+                      layoutId="nav-underline"
+                      className="absolute left-3 right-3 -bottom-px h-0.5 bg-accent rounded-full"
+                      transition={{ type: "spring", stiffness: 400, damping: 32 }}
+                    />
+                  )}
+                </li>
+              );
+            })}
+          </ul>
 
-        {/* Mobile toggle */}
-        <button
-          onClick={() => setOpen(!open)}
-          className="lg:hidden p-2 -mr-2 text-ink-soft hover:text-ink transition-colors"
-          aria-label={open ? "Close menu" : "Open menu"}
-          aria-expanded={open}
-        >
-          {open ? <X size={22} /> : <Menu size={22} />}
-        </button>
+          <ThemeToggle />
+
+          {/* Mobile toggle */}
+          <button
+            onClick={() => setOpen(!open)}
+            className="lg:hidden p-2 -mr-1 text-ink-soft hover:text-ink transition-colors"
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+          >
+            {open ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
       </nav>
 
       {/* Mobile menu */}

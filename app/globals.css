@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Class-based dark mode (toggled by adding `.dark` to <html>). */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-paper: #faf8f4;
   --color-paper-soft: #f3efe8;
@@ -9,6 +12,25 @@
   --color-accent: #9a4a2a;
   --color-accent-soft: #f0e2d9;
   --color-accent-deep: #6e3018;
+}
+
+/*
+ * Dark theme. Every surface in the app is painted through these tokens —
+ * including card surfaces, which use `bg-white/xx` (i.e. var(--color-white)) —
+ * so overriding the token values here flips the whole UI. `:root.dark` beats
+ * the `:root` selector Tailwind emits for @theme, so these win.
+ */
+:root.dark {
+  color-scheme: dark;
+  --color-paper: #1a1712;
+  --color-paper-soft: #221e18;
+  --color-ink: #f3efe6;
+  --color-ink-soft: #a9a093;
+  --color-line: #35302a;
+  --color-accent: #c2673f;
+  --color-accent-soft: #3a281e;
+  --color-accent-deep: #e0885f;
+  --color-white: #2a251f;
 }
 
 @theme inline {
@@ -25,6 +47,7 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.4s ease, color 0.4s ease;
 }
 
 ::selection {

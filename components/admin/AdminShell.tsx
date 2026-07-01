@@ -7,7 +7,7 @@ import { ChevronRight, ExternalLink, LogOut } from "lucide-react";
 
 function AdminLogo() {
   return (
-    <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-accent text-paper font-serif italic text-lg leading-none shadow-[inset_0_0_0_1.5px_rgba(250,248,244,0.25)]">
+    <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-accent text-white font-serif italic text-lg leading-none shadow-[inset_0_0_0_1.5px_rgba(250,248,244,0.25)]">
       Z
     </span>
   );
@@ -31,7 +31,9 @@ export default function AdminShell({
 
   return (
     <div className="min-h-screen bg-paper">
-      <header className="sticky top-0 z-40 bg-ink text-paper">
+      {/* Top bar is pinned to a stable warm-dark colour so it looks intentional
+          in both light and dark site themes. */}
+      <header className="sticky top-0 z-40 bg-[#1b1815] text-[#f5f1ea]">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
           <Link
             href="/admin"
@@ -39,7 +41,7 @@ export default function AdminShell({
           >
             <AdminLogo />
             <span className="font-serif text-lg hidden sm:inline">
-              Zunera <span className="text-paper/50">Admin</span>
+              Zunera <span className="text-white/45">Admin</span>
             </span>
           </Link>
           <div className="flex items-center gap-1 sm:gap-2">
@@ -47,14 +49,14 @@ export default function AdminShell({
               href="/"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs sm:text-sm text-paper/80 hover:bg-paper/10 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs sm:text-sm text-white/75 hover:bg-white/10 transition-colors"
             >
               <ExternalLink size={14} />
               <span className="hidden sm:inline">View site</span>
             </a>
             <button
               onClick={logout}
-              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs sm:text-sm text-paper/80 hover:bg-paper/10 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs sm:text-sm text-white/75 hover:bg-white/10 transition-colors"
             >
               <LogOut size={14} />
               <span className="hidden sm:inline">Log out</span>
