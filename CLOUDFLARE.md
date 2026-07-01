@@ -89,6 +89,23 @@ npm run deploy     # build and deploy to Cloudflare
 Set `NEXT_PUBLIC_SITE_URL` (Worker/custom domain) as a var or secret so
 canonical URLs, the sitemap and `llms.txt` point at the right host.
 
+### Automatic deploys (Workers Builds / Git integration)
+
+If you connect the GitHub repo in the dashboard (Worker → Settings → Builds),
+set the commands for OpenNext — the defaults (`npm run build` +
+`npx wrangler deploy`) do **not** work, because plain `next build` never
+produces `.open-next/worker.js`:
+
+| Field          | Value                              |
+| -------------- | ---------------------------------- |
+| Build command  | `npx opennextjs-cloudflare build`  |
+| Deploy command | `npx opennextjs-cloudflare deploy` |
+| Root directory | `/`                                |
+
+Content (D1) and the `ADMIN_PASSWORD` secret are runtime state — a push/deploy
+does not touch them. Run `npm run db:migrate` + `npm run db:seed` and
+`wrangler secret put ADMIN_PASSWORD` once against the remote resources.
+
 ## Regenerating binding types
 
 After changing `wrangler.jsonc`:
