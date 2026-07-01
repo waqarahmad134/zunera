@@ -1,13 +1,21 @@
 import {
-  site, books, papers, chapters, inProgress, opinions, interviews,
-  policy, posts, categories,
-} from "@/lib/data";
+  getSite, getBooks, getPapers, getChapters, getInProgress, getOpinions,
+  getInterviews, getPolicy, getPosts, getCategories,
+} from "@/lib/content";
 import { siteUrl } from "@/lib/seo";
 
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
-export function GET() {
+export async function GET() {
   const base = siteUrl();
+
+  const [
+    site, books, papers, chapters, inProgress, opinions, interviews,
+    policy, posts, categories,
+  ] = await Promise.all([
+    getSite(), getBooks(), getPapers(), getChapters(), getInProgress(),
+    getOpinions(), getInterviews(), getPolicy(), getPosts(), getCategories(),
+  ]);
 
   const lines: string[] = [
     `# ${site.name}`,

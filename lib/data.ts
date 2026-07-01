@@ -1,60 +1,124 @@
-import siteJson from "@/content/site.json";
-import affiliationsJson from "@/content/affiliations.json";
-import booksJson from "@/content/books.json";
-import papersJson from "@/content/papers.json";
-import chaptersJson from "@/content/chapters.json";
-import inProgressJson from "@/content/in-progress.json";
-import opinionsJson from "@/content/opinions.json";
-import interviewsJson from "@/content/interviews.json";
-import policyJson from "@/content/policy.json";
-import categoriesJson from "@/content/categories.json";
-import postsJson from "@/content/posts.json";
-import pagesJson from "@/content/pages.json";
+// Client-safe content types and static navigation.
+//
+// This module must stay free of any server-only imports (D1, R2, the
+// Cloudflare context) because client components such as Nav and Footer import
+// `navLinks` from here. The actual data fetching lives in lib/content.ts and is
+// server-only. Types are erased at build time, so sharing them is safe.
 
-export const pages: Record<string, boolean> = pagesJson;
-
-export function isComingSoon(slug: string): boolean {
-  return Boolean(pages[slug]);
+export interface Affiliation {
+  label: string;
+  detail: string;
+  href: string;
 }
 
-export const site = {
-  name: siteJson.name,
-  role: siteJson.role,
-  tagline: siteJson.tagline,
-  bio: siteJson.bio,
-  portrait: siteJson.portrait || "/portrait.webp",
-  interests: siteJson.interests,
-  affiliations: affiliationsJson,
-  email: { academic: siteJson.emailAcademic, personal: siteJson.emailPersonal },
-  socials: { twitter: siteJson.twitter, linkedin: siteJson.linkedin },
-};
+/** Shape of the `site` singleton row as stored in D1. */
+export interface SiteRaw {
+  name: string;
+  role: string;
+  tagline: string;
+  bio: string;
+  portrait?: string;
+  interests: string[];
+  emailAcademic: string;
+  emailPersonal: string;
+  twitter: string;
+  linkedin: string;
+}
 
-export const books = booksJson;
+/** Composed site object consumed by the UI. */
+export interface Site {
+  name: string;
+  role: string;
+  tagline: string;
+  bio: string;
+  portrait: string;
+  interests: string[];
+  affiliations: Affiliation[];
+  email: { academic: string; personal: string };
+  socials: { twitter: string; linkedin: string };
+}
 
-export const papers = papersJson.map((p) => ({
-  ...p,
-  coAuthors: p.coAuthors || null,
-}));
+export interface Seo {
+  defaultTitle: string;
+  brandName: string;
+  description: string;
+  ogImage: string;
+  keywords: string[];
+  googleVerification: string;
+}
 
-export const chapters = chaptersJson.map((c) => ({
-  ...c,
-  editors: c.editors || null,
-}));
+export type PagesMap = Record<string, boolean>;
 
-export const inProgress = inProgressJson;
-export const opinions = opinionsJson;
-export const interviews = interviewsJson;
+export interface Book {
+  title: string;
+  year: number;
+  publisher: string;
+  role: string;
+  href: string;
+  description: string;
+}
 
-export const policy = policyJson.map((p) => ({
-  ...p,
-  date: p.date || null,
-}));
+export interface Paper {
+  year: number;
+  title: string;
+  coAuthors: string | null;
+  journal: string;
+  href: string;
+}
 
-export const categories = categoriesJson;
+export interface Chapter {
+  year: number;
+  title: string;
+  book: string;
+  editors: string | null;
+  publisher: string;
+  href: string;
+}
 
-export const posts = postsJson
-  .filter((p) => p.published)
-  .sort((a, b) => (a.date < b.date ? 1 : -1));
+export interface InProgress {
+  title: string;
+  description: string;
+}
+
+export interface Opinion {
+  year: number;
+  date: string;
+  title: string;
+  outlet: string;
+  href: string;
+}
+
+export interface Interview {
+  year: number;
+  date: string;
+  title: string;
+  outlet: string;
+  href: string;
+}
+
+export interface Policy {
+  year: number;
+  title: string;
+  date: string | null;
+  org: string;
+  href: string;
+}
+
+export interface Category {
+  name: string;
+  slug: string;
+}
+
+export interface Post {
+  title: string;
+  slug: string;
+  date: string;
+  category: string;
+  image?: string;
+  excerpt: string;
+  content: string;
+  published: boolean;
+}
 
 export const navLinks = [
   { href: "/books", label: "Books" },

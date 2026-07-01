@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { chapters, isComingSoon } from "@/lib/data";
+import { getChapters, isComingSoon } from "@/lib/content";
 import PageHeader from "@/components/PageHeader";
 import PubCard from "@/components/PubCard";
 import { StaggerList, StaggerItem } from "@/components/motion";
@@ -11,8 +11,9 @@ export const metadata: Metadata = {
   description: "Book chapters contributed by Zunera.",
 };
 
-export default function ChaptersPage() {
-  if (isComingSoon("chapters")) return <ComingSoon title="Book Chapters" />;
+export default async function ChaptersPage() {
+  if (await isComingSoon("chapters")) return <ComingSoon title="Book Chapters" />;
+  const chapters = await getChapters();
 
   return (
     <>

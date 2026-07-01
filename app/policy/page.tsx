@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { policy, isComingSoon } from "@/lib/data";
+import { getPolicy, isComingSoon } from "@/lib/content";
 import PageHeader from "@/components/PageHeader";
 import PubCard from "@/components/PubCard";
 import { StaggerList, StaggerItem } from "@/components/motion";
@@ -12,8 +12,9 @@ export const metadata: Metadata = {
     "Policy publications by Zunera for Carnegie Endowment, UCL and others.",
 };
 
-export default function PolicyPage() {
-  if (isComingSoon("policy")) return <ComingSoon title="Policy" />;
+export default async function PolicyPage() {
+  if (await isComingSoon("policy")) return <ComingSoon title="Policy" />;
+  const policy = await getPolicy();
 
   return (
     <>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ArrowUpRight } from "lucide-react";
-import { books, isComingSoon } from "@/lib/data";
+import { getBooks, isComingSoon } from "@/lib/content";
 import PageHeader from "@/components/PageHeader";
 import { StaggerList, StaggerItem } from "@/components/motion";
 import ComingSoon from "@/components/ComingSoon";
@@ -11,8 +11,9 @@ export const metadata: Metadata = {
   description: "Books authored and edited by Zunera.",
 };
 
-export default function BooksPage() {
-  if (isComingSoon("books")) return <ComingSoon title="Books" />;
+export default async function BooksPage() {
+  if (await isComingSoon("books")) return <ComingSoon title="Books" />;
+  const books = await getBooks();
 
   return (
     <>

@@ -3,9 +3,11 @@ import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import { site } from "@/lib/data";
+import { getSeo, getSite } from "@/lib/content";
 import { siteUrl } from "@/lib/seo";
-import seo from "@/content/seo.json";
+
+// Content is read from D1 per request, so the whole app renders dynamically.
+export const dynamic = "force-dynamic";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -18,44 +20,47 @@ const fraunces = Fraunces({
   axes: ["opsz"],
 });
 
-const ogImage = seo.ogImage || site.portrait;
-
-export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl()),
-  title: {
-    default: seo.defaultTitle,
-    template: `%s | ${seo.brandName}`,
-  },
-  description: seo.description,
-  keywords: seo.keywords,
-  openGraph: {
-    type: "website",
-    siteName: seo.brandName,
-    title: seo.defaultTitle,
+export async function generateMetadata(): Promise<Metadata> {
+  const [seo, site] = await Promise.all([getSeo(), getSite()]);
+  const ogImage = seo.ogImage || site.portrait;
+  return {
+    metadataBase: new URL(siteUrl()),
+    title: {
+      default: seo.defaultTitle,
+      template: `%s | ${seo.brandName}`,
+    },
     description: seo.description,
-    images: [{ url: ogImage, alt: seo.brandName }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: seo.defaultTitle,
-    description: seo.description,
-    images: [ogImage],
-  },
-  robots: { index: true, follow: true },
-  ...(seo.googleVerification
-    ? { verification: { google: seo.googleVerification } }
-    : {}),
-};
+    keywords: seo.keywords,
+    openGraph: {
+      type: "website",
+      siteName: seo.brandName,
+      title: seo.defaultTitle,
+      description: seo.description,
+      images: [{ url: ogImage, alt: seo.brandName }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: seo.defaultTitle,
+      description: seo.description,
+      images: [ogImage],
+    },
+    robots: { index: true, follow: true },
+    ...(seo.googleVerification
+      ? { verification: { google: seo.googleVerification } }
+      : {}),
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#faf8f4",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const site = await getSite();
   return (
     <html
       lang="en"
@@ -64,7 +69,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <Nav />
         <main className="flex-1">{children}</main>
-        <Footer />
+        <Footer site={site} />
       </body>
     </html>
   );

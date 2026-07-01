@@ -1,14 +1,13 @@
-// Resolves the site's public URL dynamically:
-// 1. NEXT_PUBLIC_SITE_URL env var, if explicitly set (manual override)
-// 2. The Vercel production domain (your .vercel.app now; switches to the
-//    custom domain automatically once one is assigned as primary)
+// Resolves the site's public URL:
+// 1. NEXT_PUBLIC_SITE_URL, if set (set this to your Workers/custom domain)
+// 2. CF_PAGES_URL, when deployed on Cloudflare Pages
 // 3. localhost in dev
 export function siteUrl(): string {
   if (process.env.NEXT_PUBLIC_SITE_URL) {
     return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
   }
-  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
-    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  if (process.env.CF_PAGES_URL) {
+    return process.env.CF_PAGES_URL.replace(/\/$/, "");
   }
   return "http://localhost:3000";
 }

@@ -2,13 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { posts, categories, site } from "@/lib/data";
+import { getCategories, getPosts, getSite } from "@/lib/content";
 import { HeroText } from "@/components/motion";
 import { siteUrl } from "@/lib/seo";
-
-export function generateStaticParams() {
-  return posts.map((p) => ({ slug: p.slug }));
-}
 
 export async function generateMetadata({
   params,
@@ -16,6 +12,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  const [posts, site] = await Promise.all([getPosts(), getSite()]);
   const post = posts.find((p) => p.slug === slug);
   if (!post) return { title: "Post not found" };
   const image = post.image || site.portrait;
@@ -53,6 +50,11 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const [posts, categories, site] = await Promise.all([
+    getPosts(),
+    getCategories(),
+    getSite(),
+  ]);
   const post = posts.find((p) => p.slug === slug);
   if (!post) notFound();
 

@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, ArrowUpRight, BookOpen, FileText, Newspaper, Landmark } from "lucide-react";
-import { site, books, papers, opinions, interviews, policy, chapters } from "@/lib/data";
+import {
+  getSite, getBooks, getPapers, getOpinions, getInterviews, getPolicy, getChapters,
+} from "@/lib/content";
 import { HeroText, Reveal, StaggerList, StaggerItem } from "@/components/motion";
 import { siteUrl } from "@/lib/seo";
 
@@ -10,30 +12,41 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-const personLd = {
-  "@context": "https://schema.org",
-  "@type": "Person",
-  name: site.name,
-  jobTitle: site.role,
-  description: site.tagline,
-  image: `${siteUrl()}${site.portrait}`,
-  url: siteUrl(),
-  sameAs: [site.socials.twitter, site.socials.linkedin],
-  affiliation: site.affiliations.map((a) => ({
-    "@type": "Organization",
-    name: a.label,
-    url: a.href,
-  })),
-};
+export default async function Home() {
+  const [site, books, papers, opinions, interviews, policy, chapters] =
+    await Promise.all([
+      getSite(),
+      getBooks(),
+      getPapers(),
+      getOpinions(),
+      getInterviews(),
+      getPolicy(),
+      getChapters(),
+    ]);
 
-const stats = [
-  { label: "Books", value: books.length, href: "/books", icon: BookOpen },
-  { label: "Peer-reviewed papers", value: papers.length, href: "/papers", icon: FileText },
-  { label: "Commentary & media", value: opinions.length + interviews.length, href: "/commentary", icon: Newspaper },
-  { label: "Policy publications", value: policy.length, href: "/policy", icon: Landmark },
-];
+  const personLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: site.name,
+    jobTitle: site.role,
+    description: site.tagline,
+    image: `${siteUrl()}${site.portrait}`,
+    url: siteUrl(),
+    sameAs: [site.socials.twitter, site.socials.linkedin],
+    affiliation: site.affiliations.map((a) => ({
+      "@type": "Organization",
+      name: a.label,
+      url: a.href,
+    })),
+  };
 
-export default function Home() {
+  const stats = [
+    { label: "Books", value: books.length, href: "/books", icon: BookOpen },
+    { label: "Peer-reviewed papers", value: papers.length, href: "/papers", icon: FileText },
+    { label: "Commentary & media", value: opinions.length + interviews.length, href: "/commentary", icon: Newspaper },
+    { label: "Policy publications", value: policy.length, href: "/policy", icon: Landmark },
+  ];
+
   return (
     <>
       <script
@@ -138,6 +151,7 @@ export default function Home() {
       </section>
 
       {/* Featured book */}
+      {books[0] && (
       <section className="mx-auto max-w-6xl px-5 sm:px-8 mt-24">
         <Reveal>
           <p className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">
@@ -180,6 +194,7 @@ export default function Home() {
           </Reveal>
         </div>
       </section>
+      )}
 
       {/* Recent work */}
       <section className="mx-auto max-w-6xl px-5 sm:px-8 mt-24">

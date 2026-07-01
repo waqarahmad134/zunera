@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Mail } from "lucide-react";
 import { XIcon, LinkedInIcon } from "@/components/icons";
-import { site, navLinks } from "@/lib/data";
+import { navLinks, type Site } from "@/lib/data";
 
-export default function Footer() {
+export default function Footer({ site }: { site: Site }) {
   const pathname = usePathname();
   if (pathname.startsWith("/admin")) return null;
 

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUpRight, Mic, PenLine } from "lucide-react";
-import { opinions, interviews } from "@/lib/data";
+import type { Interview, Opinion } from "@/lib/data";
 
 type Tab = "all" | "opinions" | "interviews";
 
@@ -13,17 +13,27 @@ const tabs: { id: Tab; label: string }[] = [
   { id: "interviews", label: "Interviews" },
 ];
 
-const items = [
-  ...opinions.map((o) => ({ ...o, kind: "opinions" as const })),
-  ...interviews.map((i) => ({ ...i, kind: "interviews" as const })),
-].sort((a, b) => b.year - a.year);
-
-export default function CommentaryList() {
+export default function CommentaryList({
+  opinions,
+  interviews,
+}: {
+  opinions: Opinion[];
+  interviews: Interview[];
+}) {
   const [tab, setTab] = useState<Tab>("all");
+
+  const items = useMemo(
+    () =>
+      [
+        ...opinions.map((o) => ({ ...o, kind: "opinions" as const })),
+        ...interviews.map((i) => ({ ...i, kind: "interviews" as const })),
+      ].sort((a, b) => b.year - a.year),
+    [opinions, interviews]
+  );
 
   const visible = useMemo(
     () => (tab === "all" ? items : items.filter((i) => i.kind === tab)),
-    [tab]
+    [tab, items]
   );
 
   return (
