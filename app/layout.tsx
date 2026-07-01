@@ -64,8 +64,22 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${fraunces.variable} h-full antialiased`}
+      suppressHydrationWarning
+      className={`dark ${inter.variable} ${fraunces.variable} h-full antialiased`}
     >
+      <head>
+        {/*
+          Apply the saved theme before first paint to avoid a flash. The app
+          defaults to dark (the class is already on <html>); this only removes
+          it when the visitor has explicitly chosen light.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{if(localStorage.getItem('theme')==='light'){document.documentElement.classList.remove('dark');}else{document.documentElement.classList.add('dark');}}catch(e){}})();",
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <Nav />
         <main className="flex-1">{children}</main>
