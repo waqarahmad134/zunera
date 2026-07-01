@@ -4,11 +4,12 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowDown, ArrowUp, Check, ChevronDown, ChevronUp, ImagePlus, Loader2,
-  Plus, Save, Trash2, TriangleAlert, Wand2, X,
+  Check, ImagePlus, Loader2, Save, Trash2, TriangleAlert, Wand2, X,
 } from "lucide-react";
 import AdminShell from "@/components/admin/AdminShell";
 import RichTextEditor from "@/components/admin/RichTextEditor";
+import DataTable from "@/components/admin/DataTable";
+import Drawer from "@/components/admin/Drawer";
 import { getSection, type Field } from "@/lib/adminConfig";
 import {
   ACCEPTED_IMAGE_TYPES,
@@ -298,7 +299,7 @@ export default function SectionEditorPage() {
 
   const [data, setData] = useState<Item[] | Item | null>(null);
   const [optionsBySection, setOptionsBySection] = useState<Record<string, Option[]>>({});
-  const [openIdx, setOpenIdx] = useState<number | null>(null);
+  const [drawerIdx, setDrawerIdx] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -444,117 +445,77 @@ export default function SectionEditorPage() {
     );
   }
 
-  // List editor.
+  // List editor: table + a side drawer for the open item.
   const list = items!;
+  const drawerItem = drawerIdx !== null ? list[drawerIdx] : null;
+  const drawerTitle =
+    drawerItem && String(drawerItem[def.itemTitleKey] || "").trim();
+
+  function moveItem(i: number, dir: -1 | 1) {
+    const j = i + dir;
+    if (j < 0 || j >= list.length) return;
+    const next = [...list];
+    [next[i], next[j]] = [next[j], next[i]];
+    update(next);
+    setDrawerIdx(null);
+  }
+
+  function deleteItem(i: number) {
+    const title = String(list[i][def!.itemTitleKey] || "").trim() || "(untitled)";
+    if (!confirm(`Delete “${title}”? This cannot be undone after saving.`)) return;
+    update(list.filter((_, j) => j !== i));
+    setDrawerIdx(null);
+  }
+
   return (
     <AdminShell title={def.label}>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-serif text-3xl">{def.label}</h1>
-          <p className="mt-1.5 text-sm text-ink-soft">{def.description}</p>
-        </div>
-        <button
-          onClick={() => {
-            update([emptyItem(def.fields), ...list]);
-            setOpenIdx(0);
-          }}
-          className="inline-flex items-center gap-2 rounded-xl bg-accent text-paper px-4 py-2.5 text-sm font-medium hover:bg-accent-deep transition-colors"
-        >
-          <Plus size={15} /> Add new
-        </button>
-      </div>
-
-      <div className="mt-7 grid gap-3">
-        {list.length === 0 && (
-          <p className="text-sm text-ink-soft rounded-2xl border border-dashed border-line p-8 text-center">
-            Nothing here yet. Use “Add new” to create the first entry.
-          </p>
-        )}
-        {list.map((item, i) => {
-          const open = openIdx === i;
-          const title =
-            String(item[def.itemTitleKey] || "").trim() || "(untitled)";
-          return (
-            <div
-              key={i}
-              className="rounded-2xl border border-line bg-white/70 overflow-hidden"
-            >
-              <div className="flex items-center gap-2 p-3 sm:p-4">
-                <button
-                  onClick={() => setOpenIdx(open ? null : i)}
-                  className="flex flex-1 items-center gap-3 text-left min-w-0"
-                >
-                  {open ? (
-                    <ChevronUp size={16} className="shrink-0 text-accent" />
-                  ) : (
-                    <ChevronDown size={16} className="shrink-0 text-ink-soft" />
-                  )}
-                  <span className="truncate text-sm font-medium">{title}</span>
-                  {"published" in item && !item.published && (
-                    <span className="shrink-0 rounded-full bg-paper-soft border border-line px-2 py-0.5 text-[10px] uppercase tracking-wide text-ink-soft">
-                      Draft
-                    </span>
-                  )}
-                </button>
-                <div className="flex items-center gap-0.5 shrink-0">
-                  <button
-                    onClick={() => {
-                      if (i === 0) return;
-                      const next = [...list];
-                      [next[i - 1], next[i]] = [next[i], next[i - 1]];
-                      update(next);
-                      setOpenIdx(null);
-                    }}
-                    disabled={i === 0}
-                    title="Move up"
-                    className="p-2 text-ink-soft hover:text-accent disabled:opacity-30 transition-colors"
-                  >
-                    <ArrowUp size={15} />
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (i === list.length - 1) return;
-                      const next = [...list];
-                      [next[i + 1], next[i]] = [next[i], next[i + 1]];
-                      update(next);
-                      setOpenIdx(null);
-                    }}
-                    disabled={i === list.length - 1}
-                    title="Move down"
-                    className="p-2 text-ink-soft hover:text-accent disabled:opacity-30 transition-colors"
-                  >
-                    <ArrowDown size={15} />
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (!confirm(`Delete “${title}”? This cannot be undone after saving.`)) return;
-                      update(list.filter((_, j) => j !== i));
-                      setOpenIdx(null);
-                    }}
-                    title="Delete"
-                    className="p-2 text-ink-soft hover:text-red-600 transition-colors"
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                </div>
-              </div>
-              {open && (
-                <div className="border-t border-line p-4 sm:p-5 bg-white">
-                  <ItemForm
-                    fields={def.fields}
-                    item={item}
-                    optionsBySection={optionsBySection}
-                    onChange={(nextItem) =>
-                      update(list.map((it, j) => (j === i ? nextItem : it)))
-                    }
-                  />
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+      <DataTable
+        def={def}
+        items={list}
+        optionsBySection={optionsBySection}
+        onRowClick={(i) => setDrawerIdx(i)}
+        onAddNew={() => {
+          update([emptyItem(def.fields), ...list]);
+          setDrawerIdx(0);
+        }}
+        onMove={moveItem}
+        onDelete={deleteItem}
+      />
       {saveBar}
+
+      <Drawer
+        open={drawerIdx !== null}
+        onClose={() => setDrawerIdx(null)}
+        title={drawerTitle || "(untitled)"}
+        subtitle={def.label}
+        footer={
+          <>
+            <button
+              onClick={() => drawerIdx !== null && deleteItem(drawerIdx)}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-line px-3.5 py-2 text-sm text-ink-soft hover:border-red-300 hover:text-red-600 transition-colors"
+            >
+              <Trash2 size={14} /> Delete
+            </button>
+            <button
+              onClick={() => setDrawerIdx(null)}
+              className="ml-auto inline-flex items-center gap-2 rounded-xl bg-ink text-paper px-4 py-2 text-sm font-medium hover:bg-accent transition-colors"
+            >
+              Done
+            </button>
+          </>
+        }
+      >
+        {drawerItem && (
+          <ItemForm
+            fields={def.fields}
+            item={drawerItem}
+            optionsBySection={optionsBySection}
+            onChange={(nextItem) =>
+              update(list.map((it, j) => (j === drawerIdx ? nextItem : it)))
+            }
+          />
+        )}
+      </Drawer>
     </AdminShell>
   );
 }

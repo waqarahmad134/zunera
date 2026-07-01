@@ -1,52 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import {
-  BookOpen, FileText, Library, FlaskConical, PenLine, Mic, Landmark,
-  User, Building2, Tags, Newspaper, ChevronRight, Images, Search, EyeOff,
-  Layers, Database, CheckCircle2,
-} from "lucide-react";
+import { Newspaper, Images, Layers, Database, CheckCircle2 } from "lucide-react";
 import AdminShell from "@/components/admin/AdminShell";
 import { SECTIONS } from "@/lib/adminConfig";
-
-const ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
-  site: User,
-  pages: EyeOff,
-  seo: Search,
-  affiliations: Building2,
-  books: BookOpen,
-  papers: FileText,
-  chapters: Library,
-  "in-progress": FlaskConical,
-  opinions: PenLine,
-  interviews: Mic,
-  policy: Landmark,
-  categories: Tags,
-  posts: Newspaper,
-};
+import { useAdminCounts } from "@/lib/useAdminCounts";
+import { CountUp } from "@/components/admin/CountUp";
 
 const ease = [0.21, 0.47, 0.32, 0.98] as const;
-
-// Eased count-up for the stat numbers.
-function CountUp({ value }: { value: number }) {
-  const [n, setN] = useState(0);
-  useEffect(() => {
-    let raf = 0;
-    let startTs = 0;
-    const duration = 900;
-    const step = (ts: number) => {
-      if (!startTs) startTs = ts;
-      const p = Math.min(1, (ts - startTs) / duration);
-      setN(Math.round(value * (1 - Math.pow(1 - p, 3))));
-      if (p < 1) raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [value]);
-  return <>{n}</>;
-}
 
 function StatTile({
   icon: Icon,
@@ -131,48 +93,14 @@ function BarChart({
   );
 }
 
-export default function AdminDashboard() {
-  const [counts, setCounts] = useState<Record<string, number> | null>(null);
-  const [publishedPosts, setPublishedPosts] = useState(0);
-  const [mediaCount, setMediaCount] = useState(0);
+function DashboardBody() {
+  const { counts, publishedPosts, mediaCount, loading } = useAdminCounts();
 
-  useEffect(() => {
-    const collections = SECTIONS.filter((s) => !s.singleton);
+  const collections = SECTIONS.filter((s) => !s.singleton);
+  const totalItems = collections.reduce((sum, s) => sum + (counts[s.slug] ?? 0), 0);
 
-    (async () => {
-      const entries = await Promise.all(
-        collections.map(async (s) => {
-          const res = await fetch(`/api/admin/content?section=${s.slug}`);
-          if (!res.ok) return { slug: s.slug, count: 0, published: null as number | null };
-          const { data } = await res.json();
-          const arr: { published?: boolean }[] = Array.isArray(data) ? data : [];
-          const published =
-            s.slug === "posts" ? arr.filter((p) => p.published).length : null;
-          return { slug: s.slug, count: arr.length, published };
-        })
-      );
-
-      const next: Record<string, number> = {};
-      for (const e of entries) {
-        next[e.slug] = e.count;
-        if (e.published !== null) setPublishedPosts(e.published);
-      }
-      setCounts(next);
-    })();
-
-    fetch("/api/admin/media")
-      .then((r) => (r.ok ? r.json() : { files: [] }))
-      .then((b) => setMediaCount(b.files?.length ?? 0))
-      .catch(() => {});
-  }, []);
-
-  const loading = counts === null;
-  const totalItems = counts
-    ? Object.values(counts).reduce((a, b) => a + b, 0)
-    : 0;
-
-  const chartData = SECTIONS.filter((s) => !s.singleton)
-    .map((s) => ({ slug: s.slug, label: s.label, value: counts?.[s.slug] ?? 0 }))
+  const chartData = collections
+    .map((s) => ({ slug: s.slug, label: s.label, value: counts[s.slug] ?? 0 }))
     .sort((a, b) => b.value - a.value);
 
   const stats = [
@@ -183,20 +111,19 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <AdminShell title="Dashboard">
+    <>
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease }}
       >
-        <h1 className="font-serif text-3xl sm:text-4xl">Manage content</h1>
+        <h1 className="font-serif text-3xl sm:text-4xl">Dashboard</h1>
         <p className="mt-2 text-sm text-ink-soft">
-          An overview of everything on the site. Pick a section to edit — changes
-          go live immediately after saving.
+          An overview of everything on the site. Use the sidebar to jump to a
+          section — changes go live immediately after saving.
         </p>
       </motion.div>
 
-      {/* Stat tiles */}
       <div className="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {stats.map((s, i) => (
           <StatTile
@@ -210,7 +137,6 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* Chart */}
       <motion.div
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
@@ -219,72 +145,14 @@ export default function AdminDashboard() {
       >
         <BarChart data={chartData} loading={loading} />
       </motion.div>
+    </>
+  );
+}
 
-      {/* Sections */}
-      <h2 className="mt-10 mb-4 font-serif text-2xl">Sections</h2>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {SECTIONS.map((s, i) => {
-          const Icon = ICONS[s.slug] ?? FileText;
-          return (
-            <motion.div
-              key={s.slug}
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: Math.min(i * 0.03, 0.3), ease }}
-            >
-              <Link
-                href={`/admin/${s.slug}`}
-                className="group flex h-full items-start gap-4 rounded-2xl border border-line bg-white/70 p-5 transition-all duration-200 hover:border-accent/40 hover:bg-white hover:shadow-[0_8px_30px_rgba(154,74,42,0.08)]"
-              >
-                <span className="rounded-full bg-accent-soft p-2.5 text-accent shrink-0">
-                  <Icon size={17} />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-2 font-medium text-sm">
-                    {s.label}
-                    {!s.singleton && counts?.[s.slug] !== undefined && (
-                      <span className="rounded-full bg-paper-soft border border-line px-2 py-0.5 text-xs text-ink-soft">
-                        {counts[s.slug]}
-                      </span>
-                    )}
-                  </span>
-                  <span className="mt-1 block text-xs text-ink-soft leading-relaxed">
-                    {s.description}
-                  </span>
-                </span>
-                <ChevronRight
-                  size={16}
-                  className="shrink-0 self-center text-line group-hover:text-accent transition-colors"
-                />
-              </Link>
-            </motion.div>
-          );
-        })}
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.3, ease }}
-        >
-          <Link
-            href="/admin/media"
-            className="group flex h-full items-start gap-4 rounded-2xl border border-line bg-white/70 p-5 transition-all duration-200 hover:border-accent/40 hover:bg-white hover:shadow-[0_8px_30px_rgba(154,74,42,0.08)]"
-          >
-            <span className="rounded-full bg-accent-soft p-2.5 text-accent shrink-0">
-              <Images size={17} />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="font-medium text-sm">Media</span>
-              <span className="mt-1 block text-xs text-ink-soft leading-relaxed">
-                All uploaded images: preview, copy links and delete.
-              </span>
-            </span>
-            <ChevronRight
-              size={16}
-              className="shrink-0 self-center text-line group-hover:text-accent transition-colors"
-            />
-          </Link>
-        </motion.div>
-      </div>
+export default function AdminDashboard() {
+  return (
+    <AdminShell title="Dashboard">
+      <DashboardBody />
     </AdminShell>
   );
 }
