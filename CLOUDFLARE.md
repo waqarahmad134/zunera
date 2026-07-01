@@ -29,7 +29,7 @@ The `content/*.json` files remain in the repo only as **seed data** for D1.
 
 | Binding | Type | Name             |
 | ------- | ---- | ---------------- |
-| `DB`    | D1   | `zunera-content` |
+| `DB`    | D1   | `zunera` |
 | `MEDIA` | R2   | `zunera-media`   |
 | `ASSETS`| Assets | (OpenNext)     |
 
@@ -44,7 +44,7 @@ npx wrangler login
 
 # 2. Create the D1 database, then paste the printed database_id into
 #    wrangler.jsonc -> d1_databases[0].database_id
-npx wrangler d1 create zunera-content
+npx wrangler d1 create zunera
 
 # 3. Create the R2 bucket
 npx wrangler r2 bucket create zunera-media
