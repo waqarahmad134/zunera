@@ -14,6 +14,9 @@
     "db:migrate": "wrangler d1 migrations apply zunera --remote",
     "db:seed:local": "node scripts/seed.mjs && wrangler d1 execute zunera --local --file=scripts/seed.sql",
     "db:seed": "node scripts/seed.mjs && wrangler d1 execute zunera --remote --file=scripts/seed.sql",
+    "db:setup:local": "wrangler d1 migrations apply zunera --local && node scripts/seed.mjs && wrangler d1 execute zunera --local --file=scripts/seed.sql",
+    "db:setup": "wrangler d1 migrations apply zunera --remote && node scripts/seed.mjs && wrangler d1 execute zunera --remote --file=scripts/seed.sql",
+    "db:verify": "wrangler d1 execute zunera --remote --command \"SELECT section, COUNT(*) AS n FROM content_items GROUP BY section\"",
     "media:upload:local": "node scripts/upload-media.mjs --local",
     "media:upload": "node scripts/upload-media.mjs --remote"
   },
