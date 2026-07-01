@@ -35,6 +35,11 @@ export interface SectionDef {
   /** Which field to show as an item's title in list view. */
   itemTitleKey: string;
   fields: Field[];
+  /**
+   * Field keys shown as columns in the list table, in order. Only used for
+   * non-singleton sections; each key must match a `fields[].key`.
+   */
+  columns?: string[];
 }
 
 export const SECTIONS: SectionDef[] = [
@@ -134,6 +139,7 @@ export const SECTIONS: SectionDef[] = [
     label: "Affiliations",
     description: "Organisations shown on the homepage.",
     itemTitleKey: "label",
+    columns: ["label", "detail", "href"],
     fields: [
       { key: "label", label: "Organisation", type: "text" },
       { key: "detail", label: "Your role there", type: "text" },
@@ -145,6 +151,7 @@ export const SECTIONS: SectionDef[] = [
     label: "Books",
     description: "Authored and edited books.",
     itemTitleKey: "title",
+    columns: ["title", "year", "publisher", "role"],
     fields: [
       { key: "title", label: "Title", type: "text" },
       { key: "year", label: "Year", type: "number" },
@@ -159,6 +166,7 @@ export const SECTIONS: SectionDef[] = [
     label: "Papers",
     description: "Peer-reviewed journal articles.",
     itemTitleKey: "title",
+    columns: ["title", "year", "journal", "coAuthors"],
     fields: [
       { key: "title", label: "Title", type: "text" },
       { key: "year", label: "Year", type: "number" },
@@ -172,6 +180,7 @@ export const SECTIONS: SectionDef[] = [
     label: "Book Chapters",
     description: "Chapters in edited volumes.",
     itemTitleKey: "title",
+    columns: ["title", "year", "book", "publisher"],
     fields: [
       { key: "title", label: "Title", type: "text" },
       { key: "year", label: "Year", type: "number" },
@@ -186,6 +195,7 @@ export const SECTIONS: SectionDef[] = [
     label: "In Progress",
     description: "Ongoing research projects.",
     itemTitleKey: "title",
+    columns: ["title", "description"],
     fields: [
       { key: "title", label: "Title", type: "text" },
       { key: "description", label: "Description", type: "textarea" },
@@ -196,6 +206,7 @@ export const SECTIONS: SectionDef[] = [
     label: "Opinions",
     description: "Op-eds and public writing.",
     itemTitleKey: "title",
+    columns: ["title", "outlet", "date", "year"],
     fields: [
       { key: "title", label: "Title", type: "text" },
       { key: "year", label: "Year", type: "number" },
@@ -209,6 +220,7 @@ export const SECTIONS: SectionDef[] = [
     label: "Interviews",
     description: "Media interviews and appearances.",
     itemTitleKey: "title",
+    columns: ["title", "outlet", "date", "year"],
     fields: [
       { key: "title", label: "Title", type: "text" },
       { key: "year", label: "Year", type: "number" },
@@ -222,6 +234,7 @@ export const SECTIONS: SectionDef[] = [
     label: "Policy",
     description: "Policy reports and briefs.",
     itemTitleKey: "title",
+    columns: ["title", "org", "date", "year"],
     fields: [
       { key: "title", label: "Title", type: "text" },
       { key: "year", label: "Year", type: "number" },
@@ -235,6 +248,7 @@ export const SECTIONS: SectionDef[] = [
     label: "Blog Categories",
     description: "Categories used to group blog posts.",
     itemTitleKey: "name",
+    columns: ["name", "slug"],
     fields: [
       { key: "name", label: "Name", type: "text" },
       { key: "slug", label: "Slug (in the URL)", type: "slug" },
@@ -245,6 +259,7 @@ export const SECTIONS: SectionDef[] = [
     label: "Blog Posts",
     description: "Write and publish blog posts.",
     itemTitleKey: "title",
+    columns: ["title", "category", "date", "published"],
     fields: [
       { key: "title", label: "Title", type: "text" },
       { key: "slug", label: "Slug (in the URL)", type: "slug" },

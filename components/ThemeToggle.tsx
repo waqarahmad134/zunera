@@ -4,9 +4,21 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Moon, Sun } from "lucide-react";
 
+const VARIANTS = {
+  // Default: themed to match the surrounding (light or dark) surface.
+  default: "border-line text-ink-soft hover:border-accent hover:text-accent",
+  // For placement on a surface that stays dark regardless of site theme
+  // (e.g. the admin top bar), so it can't rely on the themed tokens.
+  onDark: "border-white/15 text-white/75 hover:border-white/40 hover:text-white",
+};
+
 // Reads the current theme from the <html> class (set before paint by the inline
 // script in the layout), lets the user toggle it, and persists the choice.
-export default function ThemeToggle({ className = "" }: { className?: string }) {
+export default function ThemeToggle({
+  variant = "default",
+}: {
+  variant?: keyof typeof VARIANTS;
+}) {
   const [dark, setDark] = useState(true);
   const [mounted, setMounted] = useState(false);
 
@@ -31,7 +43,7 @@ export default function ThemeToggle({ className = "" }: { className?: string }) 
       onClick={toggle}
       aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
       title={dark ? "Light mode" : "Dark mode"}
-      className={`relative grid size-9 place-items-center rounded-full border border-line text-ink-soft transition-colors hover:border-accent hover:text-accent ${className}`}
+      className={`relative grid size-9 place-items-center rounded-full border transition-colors ${VARIANTS[variant]}`}
     >
       {/* Render nothing icon-wise until mounted to avoid a hydration mismatch. */}
       {mounted && (
