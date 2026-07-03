@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { deleteCustomer, getCustomer, getCustomerSummary, updateCustomer } from "@/lib/db";
+import { hashPassword } from "@/lib/password";
 
 function parseId(raw: string): number | null {
   const id = Number(raw);
@@ -31,7 +32,12 @@ export async function PATCH(
     return NextResponse.json({ error: "Bad request" }, { status: 400 });
   }
 
-  const update: { name?: string; phone?: string | null; address?: string } = {};
+  const update: {
+    name?: string;
+    phone?: string | null;
+    address?: string;
+    passwordHash?: string | null;
+  } = {};
 
   if (body.name !== undefined) {
     const v = String(body.name).trim();
@@ -45,6 +51,18 @@ export async function PATCH(
   }
   if (body.phone !== undefined) {
     update.phone = body.phone ? String(body.phone).trim() : null;
+  }
+  if (body.password) {
+    const existing = await getCustomer(id);
+    if (!existing) return NextResponse.json({ error: "Customer not found" }, { status: 404 });
+    const phoneAfterUpdate = update.phone !== undefined ? update.phone : existing.phone;
+    if (!phoneAfterUpdate) {
+      return NextResponse.json(
+        { error: "A phone number is required to set a portal password." },
+        { status: 400 }
+      );
+    }
+    update.passwordHash = await hashPassword(String(body.password));
   }
 
   try {

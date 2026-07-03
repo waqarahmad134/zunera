@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { deleteEmployee, updateEmployee } from "@/lib/db";
+import { deleteEmployee, getEmployee, updateEmployee } from "@/lib/db";
 import { EMPLOYEE_STATUSES, type EmployeeStatus } from "@/lib/employees";
+import { hashPassword } from "@/lib/password";
 
 function parseId(raw: string): number | null {
   const id = Number(raw);
@@ -26,6 +27,7 @@ export async function PATCH(
     salary?: number;
     joinedDate?: string;
     status?: EmployeeStatus;
+    passwordHash?: string | null;
   } = {};
 
   if (body.name !== undefined) {
@@ -60,6 +62,18 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid status." }, { status: 400 });
     }
     update.status = body.status;
+  }
+  if (body.password) {
+    const existing = await getEmployee(id);
+    if (!existing) return NextResponse.json({ error: "Employee not found" }, { status: 404 });
+    const phoneAfterUpdate = update.phone !== undefined ? update.phone : existing.phone;
+    if (!phoneAfterUpdate) {
+      return NextResponse.json(
+        { error: "A phone number is required to set a staff login password." },
+        { status: 400 }
+      );
+    }
+    update.passwordHash = await hashPassword(String(body.password));
   }
 
   try {

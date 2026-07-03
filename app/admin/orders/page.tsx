@@ -31,6 +31,7 @@ function toFormValue(o: Order): OrderFormValue {
     bottles: o.bottles,
     ratePerBottle: o.ratePerBottle,
     status: o.status,
+    assignedEmployeeId: o.assignedEmployeeId,
   };
 }
 
@@ -108,6 +109,7 @@ export default function OrdersPage() {
           bottles: form.bottles,
           ratePerBottle: form.ratePerBottle,
           status: form.status,
+          assignedEmployeeId: form.assignedEmployeeId,
         }),
       });
       const body = await res.json().catch(() => ({}));

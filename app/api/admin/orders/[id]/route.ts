@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { deleteOrder, getCustomer, getOrder, updateOrder } from "@/lib/db";
+import { deleteOrder, getCustomer, getEmployee, getOrder, updateOrder } from "@/lib/db";
+import { notify } from "@/lib/notify";
 import { STATUSES, type OrderStatus } from "@/lib/orders";
 
 function parseId(raw: string): number | null {
@@ -37,6 +38,7 @@ export async function PATCH(
     bottles?: number;
     ratePerBottle?: number;
     status?: OrderStatus;
+    assignedEmployeeId?: number | null;
   } = {};
 
   if (body.customerId !== undefined) {
@@ -81,10 +83,41 @@ export async function PATCH(
     }
     update.status = body.status;
   }
+  if (body.assignedEmployeeId !== undefined) {
+    if (body.assignedEmployeeId === null || body.assignedEmployeeId === "") {
+      update.assignedEmployeeId = null;
+    } else {
+      const v = Number(body.assignedEmployeeId);
+      if (!Number.isInteger(v) || v <= 0) {
+        return NextResponse.json({ error: "Invalid assigned employee." }, { status: 400 });
+      }
+      const employee = await getEmployee(v);
+      if (!employee) {
+        return NextResponse.json({ error: "That employee no longer exists." }, { status: 400 });
+      }
+      update.assignedEmployeeId = v;
+    }
+  }
 
   try {
+    const before = await getOrder(id);
     const order = await updateOrder(id, update);
     if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
+
+    if (
+      update.assignedEmployeeId !== undefined &&
+      update.assignedEmployeeId !== null &&
+      update.assignedEmployeeId !== before?.assignedEmployeeId
+    ) {
+      const customer = await getCustomer(order.customerId);
+      await notify(
+        { role: "employee", id: update.assignedEmployeeId },
+        "New order assigned",
+        `Order #${order.id} for ${customer?.name ?? "a customer"} — ${order.bottles} bottle${order.bottles > 1 ? "s" : ""}.`,
+        "/staff"
+      );
+    }
+
     return NextResponse.json({ order });
   } catch (e) {
     return NextResponse.json(

@@ -23,6 +23,7 @@ function toFormValue(e: Employee): EmployeeFormValue {
     salary: e.salary,
     joinedDate: e.joinedDate,
     status: e.status,
+    password: "",
   };
 }
 
@@ -100,6 +101,7 @@ export default function EmployeesPage() {
           salary: form.salary,
           joinedDate: form.joinedDate,
           status: form.status,
+          password: form.password,
         }),
       });
       const body = await res.json().catch(() => ({}));
@@ -293,7 +295,7 @@ export default function EmployeesPage() {
           </>
         }
       >
-        {form && <EmployeeForm value={form} onChange={setForm} />}
+        {form && <EmployeeForm value={form} onChange={setForm} editing />}
       </Drawer>
     </AdminShell>
   );

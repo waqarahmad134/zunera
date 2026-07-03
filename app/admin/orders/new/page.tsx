@@ -13,6 +13,7 @@ const EMPTY: OrderFormValue = {
   bottles: "",
   ratePerBottle: "",
   status: "pending",
+  assignedEmployeeId: null,
 };
 
 export default function NewOrderPage() {
@@ -81,6 +82,7 @@ function NewOrderForm() {
           bottles: form.bottles,
           ratePerBottle: form.ratePerBottle,
           status: form.status,
+          assignedEmployeeId: form.assignedEmployeeId,
         }),
       });
       const body = await res.json().catch(() => ({}));

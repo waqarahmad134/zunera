@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Droplets, Lock } from "lucide-react";
 
-export default function AdminLoginPage() {
+export default function LoginPage() {
   const router = useRouter();
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -14,17 +15,17 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setBusy(true);
     setError("");
-    const res = await fetch("/api/admin/login", {
+    const res = await fetch("/api/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ phone: phone.trim(), password }),
     });
+    const body = await res.json().catch(() => ({}));
     setBusy(false);
     if (res.ok) {
-      router.push("/admin");
+      router.push(body.redirect || "/admin");
       router.refresh();
     } else {
-      const body = await res.json().catch(() => ({}));
       setError(body.error || "Login failed.");
     }
   }
@@ -40,19 +41,29 @@ export default function AdminLoginPage() {
           <span className="text-sm font-semibold">Jubilee Water</span>
         </span>
         <h1 className="mt-5 text-2xl font-semibold flex items-center gap-2">
-          <Lock size={18} className="text-ink-soft" /> Admin login
+          <Lock size={18} className="text-ink-soft" /> Log in
         </h1>
         <p className="mt-1 text-sm text-ink-soft">
-          Enter the admin password to manage orders.
+          Customers and staff: enter your phone number and password. Admin: leave the phone
+          number blank.
         </p>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          autoFocus
-          className="mt-5 w-full rounded-xl border border-line bg-white px-4 py-3 text-sm outline-none focus:border-accent transition-colors"
-        />
+        <div className="mt-5 grid gap-3">
+          <input
+            type="text"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Phone number (blank for admin)"
+            autoFocus
+            className="w-full rounded-xl border border-line bg-white px-4 py-3 text-sm outline-none focus:border-accent transition-colors"
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            className="w-full rounded-xl border border-line bg-white px-4 py-3 text-sm outline-none focus:border-accent transition-colors"
+          />
+        </div>
         {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
         <button
           type="submit"

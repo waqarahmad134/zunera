@@ -4,8 +4,9 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import {
-  LayoutDashboard, ListOrdered, LogOut, Menu, X, Droplets, Users, Receipt, BarChart3, IdCard,
+  LayoutDashboard, ListOrdered, LogOut, Menu, X, Droplets, Users, Receipt, BarChart3, IdCard, Map,
 } from "lucide-react";
+import NotificationBell from "@/components/NotificationBell";
 
 function Logo() {
   return (
@@ -22,6 +23,7 @@ const NAV = [
   { href: "/admin/employees", label: "Employees", icon: IdCard },
   { href: "/admin/expenses", label: "Expenses", icon: Receipt },
   { href: "/admin/reports", label: "Reports", icon: BarChart3 },
+  { href: "/admin/map", label: "Live map", icon: Map },
 ];
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
@@ -63,8 +65,8 @@ export default function AdminShell({
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   async function logout() {
-    await fetch("/api/admin/logout", { method: "POST" });
-    router.push("/admin/login");
+    await fetch("/api/logout", { method: "POST" });
+    router.push("/login");
     router.refresh();
   }
 
@@ -87,13 +89,16 @@ export default function AdminShell({
               </span>
             </Link>
           </div>
-          <button
-            onClick={logout}
-            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-ink-soft hover:bg-paper-soft transition-colors"
-          >
-            <LogOut size={14} />
-            <span className="hidden sm:inline">Log out</span>
-          </button>
+          <div className="flex items-center gap-1">
+            <NotificationBell apiBase="/api/admin" />
+            <button
+              onClick={logout}
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-ink-soft hover:bg-paper-soft transition-colors"
+            >
+              <LogOut size={14} />
+              <span className="hidden sm:inline">Log out</span>
+            </button>
+          </div>
         </div>
       </header>
 

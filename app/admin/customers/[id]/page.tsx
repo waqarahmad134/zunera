@@ -79,7 +79,7 @@ export default function CustomerDetailPage() {
 
   function startEdit() {
     if (!customer) return;
-    setForm({ name: customer.name, phone: customer.phone ?? "", address: customer.address });
+    setForm({ name: customer.name, phone: customer.phone ?? "", address: customer.address, password: "" });
     setEditing(true);
     setMsg(null);
   }
@@ -98,6 +98,7 @@ export default function CustomerDetailPage() {
         name: form.name.trim(),
         phone: form.phone.trim(),
         address: form.address.trim(),
+        password: form.password,
       }),
     });
     const body = await res.json().catch(() => ({}));
@@ -194,7 +195,7 @@ export default function CustomerDetailPage() {
 
             {editing && form ? (
               <div className="mt-4">
-                <CustomerForm value={form} onChange={setForm} />
+                <CustomerForm value={form} onChange={setForm} editing />
                 <div className="mt-4 flex items-center gap-3">
                   <button
                     onClick={save}

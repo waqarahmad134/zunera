@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createOrder, getCustomer, listOrders } from "@/lib/db";
+import { createOrder, getCustomer, getEmployee, listOrders } from "@/lib/db";
+import { notify } from "@/lib/notify";
 import { STATUSES, type OrderStatus } from "@/lib/orders";
 
 export async function GET(req: NextRequest) {
@@ -38,6 +39,7 @@ export async function POST(req: NextRequest) {
   const bottles = Number(body?.bottles);
   const ratePerBottle = Number(body?.ratePerBottle);
   const status = (body?.status || "pending") as OrderStatus;
+  const assignedEmployeeIdRaw = body?.assignedEmployeeId;
 
   if (!Number.isInteger(customerId) || customerId <= 0) {
     return NextResponse.json({ error: "Select a customer for this order." }, { status: 400 });
@@ -61,12 +63,33 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid status." }, { status: 400 });
   }
 
+  let assignedEmployeeId: number | null = null;
+  if (assignedEmployeeIdRaw) {
+    const v = Number(assignedEmployeeIdRaw);
+    if (!Number.isInteger(v) || v <= 0) {
+      return NextResponse.json({ error: "Invalid assigned employee." }, { status: 400 });
+    }
+    const employee = await getEmployee(v);
+    if (!employee) {
+      return NextResponse.json({ error: "That employee no longer exists." }, { status: 400 });
+    }
+    assignedEmployeeId = v;
+  }
+
   try {
     const customer = await getCustomer(customerId);
     if (!customer) {
       return NextResponse.json({ error: "That customer no longer exists." }, { status: 400 });
     }
-    const order = await createOrder({ customerId, address, bottles, ratePerBottle, status });
+    const order = await createOrder({ customerId, address, bottles, ratePerBottle, status, assignedEmployeeId });
+    if (assignedEmployeeId) {
+      await notify(
+        { role: "employee", id: assignedEmployeeId },
+        "New order assigned",
+        `Order #${order.id} for ${customer.name} — ${bottles} bottle${bottles > 1 ? "s" : ""}.`,
+        "/staff"
+      );
+    }
     return NextResponse.json({ order }, { status: 201 });
   } catch (e) {
     return NextResponse.json(

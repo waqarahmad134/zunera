@@ -8,14 +8,18 @@ export interface CustomerFormValue {
   name: string;
   phone: string;
   address: string;
+  password: string;
 }
 
 export default function CustomerForm({
   value,
   onChange,
+  editing = false,
 }: {
   value: CustomerFormValue;
   onChange: (next: CustomerFormValue) => void;
+  /** True when editing an existing customer — changes the password hint text. */
+  editing?: boolean;
 }) {
   return (
     <div className="grid gap-4">
@@ -48,6 +52,19 @@ export default function CustomerForm({
           rows={3}
           className={`${inputClass} resize-y leading-relaxed`}
         />
+      </div>
+      <div>
+        <label className={labelClass}>Portal password</label>
+        <input
+          type="password"
+          value={value.password}
+          onChange={(e) => onChange({ ...value, password: e.target.value })}
+          placeholder={editing ? "Leave blank to keep unchanged" : "Leave blank for no portal access"}
+          className={inputClass}
+        />
+        <p className="mt-1.5 text-xs text-ink-soft">
+          Lets this customer log in with their phone number to see their own orders. Requires a phone number.
+        </p>
       </div>
     </div>
   );

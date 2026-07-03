@@ -9,6 +9,7 @@ export interface EmployeeFormValue {
   salary: number | "";
   joinedDate: string;
   status: EmployeeStatus;
+  password: string;
 }
 
 const inputClass =
@@ -18,9 +19,12 @@ const labelClass = "block text-xs font-semibold tracking-wide uppercase text-ink
 export default function EmployeeForm({
   value,
   onChange,
+  editing = false,
 }: {
   value: EmployeeFormValue;
   onChange: (next: EmployeeFormValue) => void;
+  /** True when editing an existing employee — changes the password hint text. */
+  editing?: boolean;
 }) {
   return (
     <div className="grid gap-4">
@@ -82,6 +86,20 @@ export default function EmployeeForm({
             className={inputClass}
           />
         </div>
+      </div>
+
+      <div>
+        <label className={labelClass}>Staff login password</label>
+        <input
+          type="password"
+          value={value.password}
+          onChange={(e) => onChange({ ...value, password: e.target.value })}
+          placeholder={editing ? "Leave blank to keep unchanged" : "Leave blank for no staff login"}
+          className={inputClass}
+        />
+        <p className="mt-1.5 text-xs text-ink-soft">
+          Lets this employee log in with their phone number to view and update orders. Requires a phone number.
+        </p>
       </div>
 
       <div>

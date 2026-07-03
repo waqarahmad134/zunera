@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createEmployee, listEmployees } from "@/lib/db";
 import { EMPLOYEE_STATUSES, type EmployeeStatus } from "@/lib/employees";
+import { hashPassword } from "@/lib/password";
 
 export async function GET(req: NextRequest) {
   const status = req.nextUrl.searchParams.get("status");
@@ -33,6 +34,7 @@ export async function POST(req: NextRequest) {
   const salary = Number(body?.salary);
   const joinedDate = String(body?.joinedDate ?? "").trim();
   const status = (body?.status || "active") as EmployeeStatus;
+  const password = body?.password ? String(body.password) : "";
 
   if (!name) {
     return NextResponse.json({ error: "Name is required." }, { status: 400 });
@@ -49,9 +51,16 @@ export async function POST(req: NextRequest) {
   if (!EMPLOYEE_STATUSES.includes(status)) {
     return NextResponse.json({ error: "Invalid status." }, { status: 400 });
   }
+  if (password && !phone) {
+    return NextResponse.json(
+      { error: "A phone number is required to set a staff login password." },
+      { status: 400 }
+    );
+  }
 
   try {
-    const employee = await createEmployee({ name, phone, role, salary, joinedDate, status });
+    const passwordHash = password ? await hashPassword(password) : null;
+    const employee = await createEmployee({ name, phone, role, salary, joinedDate, status }, passwordHash);
     return NextResponse.json({ employee }, { status: 201 });
   } catch (e) {
     return NextResponse.json(

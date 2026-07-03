@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import CustomerPicker from "@/components/CustomerPicker";
 import type { Customer } from "@/lib/customers";
+import type { Employee } from "@/lib/employees";
 import { STATUSES, STATUS_META, formatCurrency, type OrderStatus } from "@/lib/orders";
 
 export interface OrderFormValue {
@@ -10,6 +12,7 @@ export interface OrderFormValue {
   bottles: number | "";
   ratePerBottle: number | "";
   status: OrderStatus;
+  assignedEmployeeId: number | null;
 }
 
 const inputClass =
@@ -23,6 +26,20 @@ export default function OrderForm({
   value: OrderFormValue;
   onChange: (next: OrderFormValue) => void;
 }) {
+  const [employees, setEmployees] = useState<Employee[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/admin/employees?status=active")
+      .then((r) => (r.ok ? r.json() : { employees: [] }))
+      .then((d) => {
+        if (!cancelled) setEmployees(d.employees);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const bottles = typeof value.bottles === "number" ? value.bottles : 0;
   const rate = typeof value.ratePerBottle === "number" ? value.ratePerBottle : 0;
   const total = bottles * rate;
@@ -91,6 +108,30 @@ export default function OrderForm({
       <div className="rounded-xl bg-paper-soft px-4 py-3 flex items-center justify-between">
         <span className="text-sm text-ink-soft">Total price</span>
         <span className="text-lg font-semibold tabular-nums">{formatCurrency(total)}</span>
+      </div>
+
+      <div>
+        <label className={labelClass}>Assign to employee (optional)</label>
+        <select
+          value={value.assignedEmployeeId ?? ""}
+          onChange={(e) =>
+            onChange({
+              ...value,
+              assignedEmployeeId: e.target.value ? Number(e.target.value) : null,
+            })
+          }
+          className={inputClass}
+        >
+          <option value="">Unassigned</option>
+          {(employees ?? []).map((emp) => (
+            <option key={emp.id} value={emp.id}>
+              {emp.name} — {emp.role}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1.5 text-xs text-ink-soft/80">
+          They&apos;ll get a notification for this delivery.
+        </p>
       </div>
 
       <div>

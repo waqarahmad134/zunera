@@ -5,6 +5,9 @@ import type { NewOrderInput, Order, OrderStatus } from "./orders";
 import type { Customer, CustomerSummary, NewCustomerInput } from "./customers";
 import type { Expense, ExpenseCategory, NewExpenseInput } from "./expenses";
 import type { Employee, EmployeeStatus, NewEmployeeInput } from "./employees";
+import type { Notification } from "./notifications";
+import type { EmployeeLocation } from "./locations";
+import type { Role } from "./session";
 
 // ---------------------------------------------------------------------------
 // Orders
@@ -19,6 +22,8 @@ interface OrderRow {
   rate_per_bottle: number;
   total_price: number;
   status: OrderStatus;
+  assigned_employee_id: number | null;
+  assigned_employee_name: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -33,6 +38,8 @@ function toOrder(r: OrderRow): Order {
     ratePerBottle: r.rate_per_bottle,
     totalPrice: r.total_price,
     status: r.status,
+    assignedEmployeeId: r.assigned_employee_id,
+    assignedEmployeeName: r.assigned_employee_name,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
   };
@@ -40,9 +47,12 @@ function toOrder(r: OrderRow): Order {
 
 const ORDER_SELECT = `
   SELECT o.id, o.customer_id, c.name AS customer_name, o.address, o.bottles,
-         o.rate_per_bottle, o.total_price, o.status, o.created_at, o.updated_at
+         o.rate_per_bottle, o.total_price, o.status,
+         o.assigned_employee_id, e.name AS assigned_employee_name,
+         o.created_at, o.updated_at
   FROM orders o
   JOIN customers c ON c.id = o.customer_id
+  LEFT JOIN employees e ON e.id = o.assigned_employee_id
 `;
 
 export interface OrderFilters {
@@ -50,6 +60,7 @@ export interface OrderFilters {
   /** Matches against customer name or address (case-insensitive substring). */
   search?: string;
   customerId?: number;
+  assignedEmployeeId?: number;
 }
 
 export async function listOrders(filters: OrderFilters = {}): Promise<Order[]> {
@@ -69,6 +80,10 @@ export async function listOrders(filters: OrderFilters = {}): Promise<Order[]> {
   if (filters.customerId) {
     clauses.push("o.customer_id = ?");
     binds.push(filters.customerId);
+  }
+  if (filters.assignedEmployeeId) {
+    clauses.push("o.assigned_employee_id = ?");
+    binds.push(filters.assignedEmployeeId);
   }
 
   const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
@@ -91,11 +106,19 @@ export async function createOrder(input: NewOrderInput): Promise<Order> {
   const env = await getEnv();
   const total = input.bottles * input.ratePerBottle;
   const inserted = await env.DB.prepare(
-    `INSERT INTO orders (customer_id, address, bottles, rate_per_bottle, total_price, status)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+    `INSERT INTO orders (customer_id, address, bottles, rate_per_bottle, total_price, status, assigned_employee_id)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
      RETURNING id`
   )
-    .bind(input.customerId, input.address, input.bottles, input.ratePerBottle, total, input.status)
+    .bind(
+      input.customerId,
+      input.address,
+      input.bottles,
+      input.ratePerBottle,
+      total,
+      input.status,
+      input.assignedEmployeeId ?? null
+    )
     .first<{ id: number }>();
   return (await getOrder(inserted!.id))!;
 }
@@ -106,6 +129,8 @@ export interface OrderUpdateInput {
   bottles?: number;
   ratePerBottle?: number;
   status?: OrderStatus;
+  /** undefined = leave unchanged, null = unassign, number = assign to that employee. */
+  assignedEmployeeId?: number | null;
 }
 
 export async function updateOrder(
@@ -128,8 +153,9 @@ export async function updateOrder(
        rate_per_bottle = ?4,
        total_price = ?5,
        status = ?6,
+       assigned_employee_id = ?7,
        updated_at = datetime('now')
-     WHERE id = ?7`
+     WHERE id = ?8`
   )
     .bind(
       input.customerId ?? existing.customerId,
@@ -138,6 +164,7 @@ export async function updateOrder(
       rate,
       total,
       input.status ?? existing.status,
+      input.assignedEmployeeId !== undefined ? input.assignedEmployeeId : existing.assignedEmployeeId,
       id
     )
     .run();
@@ -266,12 +293,15 @@ export async function getCustomer(id: number): Promise<Customer | null> {
   return row ? toCustomer(row) : null;
 }
 
-export async function createCustomer(input: NewCustomerInput): Promise<Customer> {
+export async function createCustomer(
+  input: NewCustomerInput,
+  passwordHash: string | null = null
+): Promise<Customer> {
   const env = await getEnv();
   const row = await env.DB.prepare(
-    `INSERT INTO customers (name, phone, address) VALUES (?1, ?2, ?3) RETURNING *`
+    `INSERT INTO customers (name, phone, address, password_hash) VALUES (?1, ?2, ?3, ?4) RETURNING *`
   )
-    .bind(input.name, input.phone || null, input.address)
+    .bind(input.name, input.phone || null, input.address, passwordHash)
     .first<CustomerRow>();
   return toCustomer(row!);
 }
@@ -280,6 +310,8 @@ export interface CustomerUpdateInput {
   name?: string;
   phone?: string | null;
   address?: string;
+  /** undefined = leave unchanged, null = clear, string = set to this hash. */
+  passwordHash?: string | null;
 }
 
 export async function updateCustomer(
@@ -290,18 +322,40 @@ export async function updateCustomer(
   const existing = await getCustomer(id);
   if (!existing) return null;
 
+  let passwordHash: string | null;
+  if (input.passwordHash !== undefined) {
+    passwordHash = input.passwordHash;
+  } else {
+    const row = await env.DB.prepare("SELECT password_hash FROM customers WHERE id = ?1")
+      .bind(id)
+      .first<{ password_hash: string | null }>();
+    passwordHash = row?.password_hash ?? null;
+  }
+
   const row = await env.DB.prepare(
-    `UPDATE customers SET name = ?1, phone = ?2, address = ?3, updated_at = datetime('now')
-     WHERE id = ?4 RETURNING *`
+    `UPDATE customers SET name = ?1, phone = ?2, address = ?3, password_hash = ?4, updated_at = datetime('now')
+     WHERE id = ?5 RETURNING *`
   )
     .bind(
       input.name ?? existing.name,
       input.phone !== undefined ? input.phone || null : existing.phone,
       input.address ?? existing.address,
+      passwordHash,
       id
     )
     .first<CustomerRow>();
   return row ? toCustomer(row) : null;
+}
+
+/** Auth lookup only — includes the password hash, unlike toCustomer(). */
+export async function getCustomerByPhone(
+  phone: string
+): Promise<{ id: number; name: string; passwordHash: string | null } | null> {
+  const env = await getEnv();
+  const row = await env.DB.prepare("SELECT id, name, password_hash FROM customers WHERE phone = ?1")
+    .bind(phone)
+    .first<{ id: number; name: string; password_hash: string | null }>();
+  return row ? { id: row.id, name: row.name, passwordHash: row.password_hash } : null;
 }
 
 /** Throws if the customer has orders — callers should catch and surface a 409. */
@@ -636,13 +690,16 @@ export async function getEmployee(id: number): Promise<Employee | null> {
   return row ? toEmployee(row) : null;
 }
 
-export async function createEmployee(input: NewEmployeeInput): Promise<Employee> {
+export async function createEmployee(
+  input: NewEmployeeInput,
+  passwordHash: string | null = null
+): Promise<Employee> {
   const env = await getEnv();
   const row = await env.DB.prepare(
-    `INSERT INTO employees (name, phone, role, salary, joined_date, status)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6) RETURNING *`
+    `INSERT INTO employees (name, phone, role, salary, joined_date, status, password_hash)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7) RETURNING *`
   )
-    .bind(input.name, input.phone || null, input.role, input.salary, input.joinedDate, input.status)
+    .bind(input.name, input.phone || null, input.role, input.salary, input.joinedDate, input.status, passwordHash)
     .first<EmployeeRow>();
   return toEmployee(row!);
 }
@@ -654,6 +711,8 @@ export interface EmployeeUpdateInput {
   salary?: number;
   joinedDate?: string;
   status?: EmployeeStatus;
+  /** undefined = leave unchanged, null = clear, string = set to this hash. */
+  passwordHash?: string | null;
 }
 
 export async function updateEmployee(
@@ -664,11 +723,21 @@ export async function updateEmployee(
   const existing = await getEmployee(id);
   if (!existing) return null;
 
+  let passwordHash: string | null;
+  if (input.passwordHash !== undefined) {
+    passwordHash = input.passwordHash;
+  } else {
+    const row = await env.DB.prepare("SELECT password_hash FROM employees WHERE id = ?1")
+      .bind(id)
+      .first<{ password_hash: string | null }>();
+    passwordHash = row?.password_hash ?? null;
+  }
+
   const row = await env.DB.prepare(
     `UPDATE employees SET
        name = ?1, phone = ?2, role = ?3, salary = ?4, joined_date = ?5, status = ?6,
-       updated_at = datetime('now')
-     WHERE id = ?7 RETURNING *`
+       password_hash = ?7, updated_at = datetime('now')
+     WHERE id = ?8 RETURNING *`
   )
     .bind(
       input.name ?? existing.name,
@@ -677,6 +746,7 @@ export async function updateEmployee(
       input.salary ?? existing.salary,
       input.joinedDate ?? existing.joinedDate,
       input.status ?? existing.status,
+      passwordHash,
       id
     )
     .first<EmployeeRow>();
@@ -686,4 +756,181 @@ export async function updateEmployee(
 export async function deleteEmployee(id: number): Promise<void> {
   const env = await getEnv();
   await env.DB.prepare("DELETE FROM employees WHERE id = ?1").bind(id).run();
+}
+
+/** Auth lookup only — includes the password hash, unlike toEmployee(). */
+export async function getEmployeeByPhone(
+  phone: string
+): Promise<{ id: number; name: string; status: EmployeeStatus; passwordHash: string | null } | null> {
+  const env = await getEnv();
+  const row = await env.DB.prepare(
+    "SELECT id, name, status, password_hash FROM employees WHERE phone = ?1"
+  )
+    .bind(phone)
+    .first<{ id: number; name: string; status: EmployeeStatus; password_hash: string | null }>();
+  return row ? { id: row.id, name: row.name, status: row.status, passwordHash: row.password_hash } : null;
+}
+
+// ---------------------------------------------------------------------------
+// Notifications — in-app + backing store for Web Push subscriptions.
+// `for_role` + `for_id` scope the recipient: role='admin' (id NULL) reaches
+// every admin session; role in ('employee','customer') with an id reaches
+// that one user only.
+// ---------------------------------------------------------------------------
+
+export interface NotificationRecipient {
+  role: Role;
+  id?: number | null;
+}
+
+interface NotificationRow {
+  id: number;
+  title: string;
+  body: string;
+  url: string | null;
+  read_at: string | null;
+  created_at: string;
+}
+
+function toNotification(r: NotificationRow): Notification {
+  return {
+    id: r.id,
+    title: r.title,
+    body: r.body,
+    url: r.url,
+    read: r.read_at !== null,
+    createdAt: r.created_at,
+  };
+}
+
+export async function createNotification(
+  recipient: NotificationRecipient,
+  title: string,
+  body: string,
+  url?: string
+): Promise<void> {
+  const env = await getEnv();
+  await env.DB.prepare(
+    `INSERT INTO notifications (for_role, for_id, title, body, url) VALUES (?1, ?2, ?3, ?4, ?5)`
+  )
+    .bind(recipient.role, recipient.id ?? null, title, body, url ?? null)
+    .run();
+}
+
+export async function listNotifications(recipient: NotificationRecipient, limit = 30): Promise<Notification[]> {
+  const env = await getEnv();
+  const { results } = await env.DB.prepare(
+    `SELECT * FROM notifications WHERE for_role = ?1 AND (for_id IS ?2)
+     ORDER BY created_at DESC, id DESC LIMIT ?3`
+  )
+    .bind(recipient.role, recipient.id ?? null, limit)
+    .all<NotificationRow>();
+  return (results ?? []).map(toNotification);
+}
+
+export async function unreadNotificationCount(recipient: NotificationRecipient): Promise<number> {
+  const env = await getEnv();
+  const row = await env.DB.prepare(
+    `SELECT COUNT(*) AS count FROM notifications WHERE for_role = ?1 AND (for_id IS ?2) AND read_at IS NULL`
+  )
+    .bind(recipient.role, recipient.id ?? null)
+    .first<{ count: number }>();
+  return row?.count ?? 0;
+}
+
+export async function markNotificationsRead(recipient: NotificationRecipient): Promise<void> {
+  const env = await getEnv();
+  await env.DB.prepare(
+    `UPDATE notifications SET read_at = datetime('now') WHERE for_role = ?1 AND (for_id IS ?2) AND read_at IS NULL`
+  )
+    .bind(recipient.role, recipient.id ?? null)
+    .run();
+}
+
+// ---------------------------------------------------------------------------
+// Push subscriptions
+// ---------------------------------------------------------------------------
+
+export interface PushSubscriptionRecord {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+}
+
+export async function savePushSubscription(
+  recipient: NotificationRecipient,
+  sub: PushSubscriptionRecord
+): Promise<void> {
+  const env = await getEnv();
+  await env.DB.prepare(
+    `INSERT INTO push_subscriptions (for_role, for_id, endpoint, p256dh, auth) VALUES (?1, ?2, ?3, ?4, ?5)
+     ON CONFLICT(endpoint) DO UPDATE SET
+       for_role = excluded.for_role, for_id = excluded.for_id,
+       p256dh = excluded.p256dh, auth = excluded.auth`
+  )
+    .bind(recipient.role, recipient.id ?? null, sub.endpoint, sub.p256dh, sub.auth)
+    .run();
+}
+
+export async function deletePushSubscription(endpoint: string): Promise<void> {
+  const env = await getEnv();
+  await env.DB.prepare("DELETE FROM push_subscriptions WHERE endpoint = ?1").bind(endpoint).run();
+}
+
+export async function listPushSubscriptions(recipient: NotificationRecipient): Promise<PushSubscriptionRecord[]> {
+  const env = await getEnv();
+  const { results } = await env.DB.prepare(
+    `SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE for_role = ?1 AND (for_id IS ?2)`
+  )
+    .bind(recipient.role, recipient.id ?? null)
+    .all<PushSubscriptionRecord>();
+  return results ?? [];
+}
+
+// ---------------------------------------------------------------------------
+// Employee live location — one row per employee, upserted on every ping.
+// ---------------------------------------------------------------------------
+
+export async function saveEmployeeLocation(
+  employeeId: number,
+  lat: number,
+  lng: number,
+  accuracy: number | null
+): Promise<void> {
+  const env = await getEnv();
+  await env.DB.prepare(
+    `INSERT INTO employee_locations (employee_id, lat, lng, accuracy, updated_at)
+     VALUES (?1, ?2, ?3, ?4, datetime('now'))
+     ON CONFLICT(employee_id) DO UPDATE SET
+       lat = excluded.lat, lng = excluded.lng, accuracy = excluded.accuracy, updated_at = excluded.updated_at`
+  )
+    .bind(employeeId, lat, lng, accuracy)
+    .run();
+}
+
+/** Only active employees who have shared a location at least once. */
+export async function listEmployeeLocations(): Promise<EmployeeLocation[]> {
+  const env = await getEnv();
+  const { results } = await env.DB.prepare(
+    `SELECT l.employee_id, e.name AS employee_name, l.lat, l.lng, l.accuracy, l.updated_at
+     FROM employee_locations l
+     JOIN employees e ON e.id = l.employee_id
+     WHERE e.status = 'active'
+     ORDER BY l.updated_at DESC`
+  ).all<{
+    employee_id: number;
+    employee_name: string;
+    lat: number;
+    lng: number;
+    accuracy: number | null;
+    updated_at: string;
+  }>();
+  return (results ?? []).map((r) => ({
+    employeeId: r.employee_id,
+    employeeName: r.employee_name,
+    lat: r.lat,
+    lng: r.lng,
+    accuracy: r.accuracy,
+    updatedAt: r.updated_at,
+  }));
 }

@@ -7,7 +7,7 @@ import { ArrowLeft, Check, Loader2, Save, TriangleAlert } from "lucide-react";
 import AdminShell from "@/components/AdminShell";
 import CustomerForm, { type CustomerFormValue } from "@/components/CustomerForm";
 
-const EMPTY: CustomerFormValue = { name: "", phone: "", address: "" };
+const EMPTY: CustomerFormValue = { name: "", phone: "", address: "", password: "" };
 
 export default function NewCustomerPage() {
   const router = useRouter();
@@ -30,6 +30,7 @@ export default function NewCustomerPage() {
           name: form.name.trim(),
           phone: form.phone.trim(),
           address: form.address.trim(),
+          password: form.password,
         }),
       });
       const body = await res.json().catch(() => ({}));
@@ -59,7 +60,7 @@ export default function NewCustomerPage() {
       <p className="mt-1.5 text-sm text-ink-soft">Save their details so you can select them on future orders.</p>
 
       <div className="mt-7 max-w-xl rounded-2xl border border-line bg-white p-5 sm:p-7">
-        <CustomerForm value={form} onChange={setForm} />
+        <CustomerForm value={form} onChange={setForm} editing={false} />
       </div>
 
       <div className="sticky bottom-4 mt-6 flex max-w-xl items-center gap-3 rounded-2xl border border-line bg-white/95 backdrop-blur p-3 shadow-[0_8px_30px_rgba(11,11,11,0.10)]">

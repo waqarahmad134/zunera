@@ -14,6 +14,9 @@ export interface Order {
   ratePerBottle: number;
   totalPrice: number;
   status: OrderStatus;
+  assignedEmployeeId: number | null;
+  /** Denormalized from the employee record for display, via join. */
+  assignedEmployeeName: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -25,6 +28,7 @@ export interface NewOrderInput {
   bottles: number;
   ratePerBottle: number;
   status: OrderStatus;
+  assignedEmployeeId?: number | null;
 }
 
 export const STATUSES: OrderStatus[] = ["pending", "delivered", "cancelled"];

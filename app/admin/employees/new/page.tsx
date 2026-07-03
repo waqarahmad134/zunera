@@ -18,6 +18,7 @@ const EMPTY: EmployeeFormValue = {
   salary: "",
   joinedDate: today(),
   status: "active",
+  password: "",
 };
 
 export default function NewEmployeePage() {
@@ -57,6 +58,7 @@ export default function NewEmployeePage() {
           salary: form.salary,
           joinedDate: form.joinedDate,
           status: form.status,
+          password: form.password,
         }),
       });
       const body = await res.json().catch(() => ({}));
@@ -86,7 +88,7 @@ export default function NewEmployeePage() {
       <p className="mt-1.5 text-sm text-ink-soft">Add a driver or staff member.</p>
 
       <div className="mt-7 max-w-xl rounded-2xl border border-line bg-white p-5 sm:p-7">
-        <EmployeeForm value={form} onChange={setForm} />
+        <EmployeeForm value={form} onChange={setForm} editing={false} />
       </div>
 
       <div className="sticky bottom-4 mt-6 flex max-w-xl items-center gap-3 rounded-2xl border border-line bg-white/95 backdrop-blur p-3 shadow-[0_8px_30px_rgba(11,11,11,0.10)]">
