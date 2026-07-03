@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { ADMIN_COOKIE, adminSecret, adminToken } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
-  const secret = adminSecret();
+  const secret = await adminSecret();
   if (!secret) {
     return NextResponse.json(
       { error: "ADMIN_PASSWORD is not configured on the server." },
