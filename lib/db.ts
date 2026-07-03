@@ -4,6 +4,7 @@ import { getEnv } from "./cf";
 import type { NewOrderInput, Order, OrderStatus } from "./orders";
 import type { Customer, CustomerSummary, NewCustomerInput } from "./customers";
 import type { Expense, ExpenseCategory, NewExpenseInput } from "./expenses";
+import type { Employee, EmployeeStatus, NewEmployeeInput } from "./employees";
 
 // ---------------------------------------------------------------------------
 // Orders
@@ -568,4 +569,121 @@ export async function getReport(from: string | null, to: string): Promise<Report
     },
     series,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Employees
+// ---------------------------------------------------------------------------
+
+interface EmployeeRow {
+  id: number;
+  name: string;
+  phone: string | null;
+  role: string;
+  salary: number;
+  joined_date: string;
+  status: EmployeeStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+function toEmployee(r: EmployeeRow): Employee {
+  return {
+    id: r.id,
+    name: r.name,
+    phone: r.phone,
+    role: r.role,
+    salary: r.salary,
+    joinedDate: r.joined_date,
+    status: r.status,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
+export interface EmployeeFilters {
+  status?: EmployeeStatus;
+  search?: string;
+}
+
+export async function listEmployees(filters: EmployeeFilters = {}): Promise<Employee[]> {
+  const env = await getEnv();
+  const clauses: string[] = [];
+  const binds: unknown[] = [];
+
+  if (filters.status) {
+    clauses.push("status = ?");
+    binds.push(filters.status);
+  }
+  if (filters.search) {
+    clauses.push("(name LIKE ? OR role LIKE ? OR phone LIKE ?)");
+    const like = `%${filters.search}%`;
+    binds.push(like, like, like);
+  }
+
+  const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
+  const { results } = await env.DB.prepare(
+    `SELECT * FROM employees ${where} ORDER BY name ASC`
+  )
+    .bind(...binds)
+    .all<EmployeeRow>();
+  return (results ?? []).map(toEmployee);
+}
+
+export async function getEmployee(id: number): Promise<Employee | null> {
+  const env = await getEnv();
+  const row = await env.DB.prepare("SELECT * FROM employees WHERE id = ?1").bind(id).first<EmployeeRow>();
+  return row ? toEmployee(row) : null;
+}
+
+export async function createEmployee(input: NewEmployeeInput): Promise<Employee> {
+  const env = await getEnv();
+  const row = await env.DB.prepare(
+    `INSERT INTO employees (name, phone, role, salary, joined_date, status)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6) RETURNING *`
+  )
+    .bind(input.name, input.phone || null, input.role, input.salary, input.joinedDate, input.status)
+    .first<EmployeeRow>();
+  return toEmployee(row!);
+}
+
+export interface EmployeeUpdateInput {
+  name?: string;
+  phone?: string | null;
+  role?: string;
+  salary?: number;
+  joinedDate?: string;
+  status?: EmployeeStatus;
+}
+
+export async function updateEmployee(
+  id: number,
+  input: EmployeeUpdateInput
+): Promise<Employee | null> {
+  const env = await getEnv();
+  const existing = await getEmployee(id);
+  if (!existing) return null;
+
+  const row = await env.DB.prepare(
+    `UPDATE employees SET
+       name = ?1, phone = ?2, role = ?3, salary = ?4, joined_date = ?5, status = ?6,
+       updated_at = datetime('now')
+     WHERE id = ?7 RETURNING *`
+  )
+    .bind(
+      input.name ?? existing.name,
+      input.phone !== undefined ? input.phone || null : existing.phone,
+      input.role ?? existing.role,
+      input.salary ?? existing.salary,
+      input.joinedDate ?? existing.joinedDate,
+      input.status ?? existing.status,
+      id
+    )
+    .first<EmployeeRow>();
+  return row ? toEmployee(row) : null;
+}
+
+export async function deleteEmployee(id: number): Promise<void> {
+  const env = await getEnv();
+  await env.DB.prepare("DELETE FROM employees WHERE id = ?1").bind(id).run();
 }
