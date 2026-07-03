@@ -94,7 +94,11 @@ export default function LiveMap() {
 
   return (
     <div className="relative">
-      <div ref={containerRef} className="h-[520px] w-full rounded-2xl border border-line" />
+      {/* z-0 pins this as its own stacking context, so Leaflet's internal
+          panes/controls (z-index up to 1000 in leaflet.css) stay contained
+          here and never render above app chrome like the mobile nav drawer
+          or the sticky header. */}
+      <div ref={containerRef} className="relative z-0 h-[520px] w-full rounded-2xl border border-line" />
       {locations !== null && locations.length === 0 && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center">
           <p className="rounded-xl bg-white/95 px-4 py-2.5 text-sm text-ink-soft shadow-[0_8px_30px_rgba(11,11,11,0.10)]">

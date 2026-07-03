@@ -108,7 +108,10 @@ export default function AdminShell({
         </aside>
 
         {mobileNavOpen && (
-          <div className="fixed inset-0 z-50 flex lg:hidden">
+          // z-[1100]: above Leaflet's own panes/controls (z-index up to 1000
+          // in leaflet.css), which otherwise render on top of this drawer
+          // since the map container doesn't form its own stacking context.
+          <div className="fixed inset-0 z-[1100] flex lg:hidden">
             <div
               onClick={() => setMobileNavOpen(false)}
               className="absolute inset-0 bg-ink/40"

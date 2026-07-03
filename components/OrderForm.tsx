@@ -45,8 +45,15 @@ export default function OrderForm({
   const total = bottles * rate;
 
   return (
-    <div className="grid gap-4">
-      <div>
+    // grid-cols-1 (not just `grid`) is required here, not cosmetic: Tailwind's
+    // grid-cols-N utilities use `minmax(0, 1fr)` tracks, whereas a bare
+    // `grid` container falls back to an `auto`-sized implicit column that
+    // grows to fit a child's min-content width. The CustomerPicker chip's
+    // nowrap phone/address text has no wrap point, so without this its
+    // min-content size blows out the whole column (and the page) past the
+    // viewport on mobile instead of truncating.
+    <div className="grid grid-cols-1 gap-4">
+      <div className="min-w-0">
         <label className={labelClass}>Customer</label>
         <CustomerPicker
           value={value.customer}

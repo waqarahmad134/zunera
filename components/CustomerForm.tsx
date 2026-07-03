@@ -22,7 +22,10 @@ export default function CustomerForm({
   editing?: boolean;
 }) {
   return (
-    <div className="grid gap-4">
+    // grid-cols-1, not bare `grid`: Tailwind's grid-cols-N utilities use
+    // minmax(0, 1fr) tracks, avoiding the "auto" implicit-column blowout
+    // that lets unbreakable content grow the page wider than the viewport.
+    <div className="grid grid-cols-1 gap-4">
       <div>
         <label className={labelClass}>Name</label>
         <input
