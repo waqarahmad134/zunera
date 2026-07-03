@@ -912,7 +912,8 @@ export async function saveEmployeeLocation(
 export async function listEmployeeLocations(): Promise<EmployeeLocation[]> {
   const env = await getEnv();
   const { results } = await env.DB.prepare(
-    `SELECT l.employee_id, e.name AS employee_name, l.lat, l.lng, l.accuracy, l.updated_at
+    `SELECT l.employee_id, e.name AS employee_name, e.role AS employee_role, e.phone AS employee_phone,
+            l.lat, l.lng, l.accuracy, l.updated_at
      FROM employee_locations l
      JOIN employees e ON e.id = l.employee_id
      WHERE e.status = 'active'
@@ -920,6 +921,8 @@ export async function listEmployeeLocations(): Promise<EmployeeLocation[]> {
   ).all<{
     employee_id: number;
     employee_name: string;
+    employee_role: string;
+    employee_phone: string | null;
     lat: number;
     lng: number;
     accuracy: number | null;
@@ -928,6 +931,8 @@ export async function listEmployeeLocations(): Promise<EmployeeLocation[]> {
   return (results ?? []).map((r) => ({
     employeeId: r.employee_id,
     employeeName: r.employee_name,
+    employeeRole: r.employee_role,
+    employeePhone: r.employee_phone,
     lat: r.lat,
     lng: r.lng,
     accuracy: r.accuracy,

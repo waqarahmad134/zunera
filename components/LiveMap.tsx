@@ -4,17 +4,55 @@ import { useEffect, useRef, useState } from "react";
 import type { Map as LeafletMap, Marker } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { EmployeeLocation } from "@/lib/locations";
+import { formatDateTime } from "@/lib/orders";
 
 const DEFAULT_CENTER: [number, number] = [30.3753, 69.3451]; // Pakistan, roughly — replaced once locations arrive
 const REFRESH_INTERVAL_MS = 15_000;
 
-function pinIcon(L: typeof import("leaflet")) {
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0][0].toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+/** A small circular avatar (employee initials) instead of a generic map pin. */
+function avatarIcon(L: typeof import("leaflet"), name: string) {
   return L.divIcon({
     className: "",
-    html: `<span style="display:block;width:14px;height:14px;border-radius:9999px;background:#2a78d6;border:3px solid #fff;box-shadow:0 1px 4px rgba(11,11,11,0.35)"></span>`,
-    iconSize: [14, 14],
-    iconAnchor: [7, 7],
+    html: `<span style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9999px;background:#2a78d6;color:#fff;font:600 12px/1 system-ui,sans-serif;border:2.5px solid #fff;box-shadow:0 1px 5px rgba(11,11,11,0.4)">${escapeHtml(
+      initials(name)
+    )}</span>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
   });
+}
+
+function popupHtml(loc: EmployeeLocation): string {
+  return `
+    <div style="min-width:170px;font-family:inherit;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;flex-shrink:0;border-radius:9999px;background:#2a78d6;color:#fff;font:600 11px/1 system-ui,sans-serif;">${escapeHtml(
+          initials(loc.employeeName)
+        )}</span>
+        <strong style="font-size:13px;">${escapeHtml(loc.employeeName)}</strong>
+      </div>
+      <div style="font-size:12px;color:#57534e;line-height:1.6;">
+        ${escapeHtml(loc.employeeRole)}<br/>
+        ${loc.employeePhone ? `${escapeHtml(loc.employeePhone)}<br/>` : ""}
+        Updated ${escapeHtml(formatDateTime(loc.updatedAt))}
+      </div>
+    </div>
+  `;
 }
 
 export default function LiveMap() {
@@ -70,11 +108,13 @@ export default function LiveMap() {
       const existing = markersRef.current.get(loc.employeeId);
       if (existing) {
         existing.setLatLng([loc.lat, loc.lng]);
+        existing.setPopupContent(popupHtml(loc));
       } else {
         const marker = leaflet
-          .marker([loc.lat, loc.lng], { icon: pinIcon(leaflet) })
+          .marker([loc.lat, loc.lng], { icon: avatarIcon(leaflet, loc.employeeName) })
           .addTo(map)
-          .bindTooltip(loc.employeeName, { permanent: false, direction: "top" });
+          .bindTooltip(loc.employeeName, { permanent: false, direction: "top" })
+          .bindPopup(popupHtml(loc));
         markersRef.current.set(loc.employeeId, marker);
       }
     }
