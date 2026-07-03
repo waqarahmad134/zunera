@@ -116,15 +116,15 @@ npx wrangler login
 #   npx wrangler d1 create jubilee-water   (then update wrangler.jsonc)
 
 npx wrangler secret put ADMIN_PASSWORD    # sets the production admin password
-npx wrangler secret put VAPID_PRIVATE_KEY # enables Web Push (see below)
 ```
 
 `VAPID_PRIVATE_KEY` is the private half of a Web Push signing keypair — the
-public half is already committed in `lib/push-public-key.ts` (it's not
-secret, browsers receive it anyway). Without this secret set, push falls
-back to a fixed dev-only key locally and is disabled in production (in-app
-notifications still work either way). To generate your own pair instead of
-using the built-in one:
+public half is committed in `lib/push-public-key.ts` (not secret, browsers
+receive it anyway). Web Push works out of the box, in dev and in
+production, using a built-in fallback keypair in `lib/vapid.ts` — no secret
+setup required to get started (in-app notifications also work regardless).
+To use your own keypair instead of the built-in one, generate a pair and
+set it as a secret, which always takes priority over the fallback:
 
 ```bash
 node -e "
@@ -138,7 +138,7 @@ console.log('VAPID_PRIVATE_KEY =', b64url(Buffer.from(priv.d,'base64')));
 ```
 
 Paste `VAPID_PUBLIC_KEY` into `lib/push-public-key.ts` and set
-`VAPID_PRIVATE_KEY` via `wrangler secret put` above.
+`VAPID_PRIVATE_KEY` via `npx wrangler secret put VAPID_PRIVATE_KEY`.
 
 ## Database
 

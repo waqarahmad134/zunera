@@ -1,15 +1,14 @@
 import "server-only";
 import { getEnv } from "./cf";
 
-// Dev-only fallback matching a fixed dev keypair (mirrors ADMIN_PASSWORD's
-// "admin123" fallback in lib/auth.ts) — production must set
-// VAPID_PRIVATE_KEY via `wrangler secret put VAPID_PRIVATE_KEY`, paired
-// with the exact VAPID_PUBLIC_KEY in lib/push-public-key.ts.
-const DEV_VAPID_PRIVATE_D = "vdppVcwFD3Mn10KkiWyXnW6pT0sGgKyR_DGkOm4lYGE";
+// Built-in fallback so Web Push works out of the box, in dev and in
+// production, without requiring `wrangler secret put VAPID_PRIVATE_KEY`
+// first. Pairs with the VAPID_PUBLIC_KEY in lib/push-public-key.ts. Set the
+// VAPID_PRIVATE_KEY Cloudflare secret to override with your own keypair
+// instead (see README) — the secret always wins when present.
+const FALLBACK_VAPID_PRIVATE_D = "pcfaP0KeCvXqdQLfUVEBRmu4yXi9UgKTLySbONTPXds";
 
-export async function vapidPrivateD(): Promise<string | null> {
+export async function vapidPrivateD(): Promise<string> {
   const env = await getEnv();
-  if (env.VAPID_PRIVATE_KEY) return env.VAPID_PRIVATE_KEY;
-  if (process.env.NODE_ENV !== "production") return DEV_VAPID_PRIVATE_D;
-  return null;
+  return env.VAPID_PRIVATE_KEY || FALLBACK_VAPID_PRIVATE_D;
 }
