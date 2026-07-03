@@ -771,6 +771,30 @@ export async function getEmployeeByPhone(
   return row ? { id: row.id, name: row.name, status: row.status, passwordHash: row.password_hash } : null;
 }
 
+/**
+ * True if `phone` already belongs to a different employee or customer.
+ * Phone is the login identifier for both roles and the login lookup checks
+ * employees before customers, so a collision silently locks out whichever
+ * record loses (it can never be reached, or logs in as the other account if
+ * passwords happen to match) — this must be rejected before it happens,
+ * not discovered afterwards.
+ */
+export async function isPhoneInUse(
+  phone: string,
+  exclude: { employeeId?: number; customerId?: number } = {}
+): Promise<boolean> {
+  const env = await getEnv();
+  const empRow = await env.DB.prepare("SELECT id FROM employees WHERE phone = ?1 AND id != ?2 LIMIT 1")
+    .bind(phone, exclude.employeeId ?? -1)
+    .first<{ id: number }>();
+  if (empRow) return true;
+
+  const custRow = await env.DB.prepare("SELECT id FROM customers WHERE phone = ?1 AND id != ?2 LIMIT 1")
+    .bind(phone, exclude.customerId ?? -1)
+    .first<{ id: number }>();
+  return !!custRow;
+}
+
 // ---------------------------------------------------------------------------
 // Notifications — in-app + backing store for Web Push subscriptions.
 // `for_role` + `for_id` scope the recipient: role='admin' (id NULL) reaches

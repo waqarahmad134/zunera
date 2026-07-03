@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cached } from "@/lib/api-cache";
-import { createCustomer, listCustomers } from "@/lib/db";
+import { createCustomer, isPhoneInUse, listCustomers } from "@/lib/db";
 import { hashPassword } from "@/lib/password";
 
 export async function GET(req: NextRequest) {
@@ -34,6 +34,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { error: "A phone number is required to set a portal password." },
       { status: 400 }
+    );
+  }
+  if (phone && (await isPhoneInUse(phone))) {
+    return NextResponse.json(
+      { error: "This phone number is already used by another employee or customer account." },
+      { status: 409 }
     );
   }
 

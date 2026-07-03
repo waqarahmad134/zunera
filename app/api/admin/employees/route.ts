@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cached } from "@/lib/api-cache";
-import { createEmployee, listEmployees } from "@/lib/db";
+import { createEmployee, isPhoneInUse, listEmployees } from "@/lib/db";
 import { EMPLOYEE_STATUSES, type EmployeeStatus } from "@/lib/employees";
 import { hashPassword } from "@/lib/password";
 
@@ -56,6 +56,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { error: "A phone number is required to set a staff login password." },
       { status: 400 }
+    );
+  }
+  if (phone && (await isPhoneInUse(phone))) {
+    return NextResponse.json(
+      { error: "This phone number is already used by another employee or customer account." },
+      { status: 409 }
     );
   }
 

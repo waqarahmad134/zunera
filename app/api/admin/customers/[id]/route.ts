@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cached } from "@/lib/api-cache";
-import { deleteCustomer, getCustomer, getCustomerSummary, updateCustomer } from "@/lib/db";
+import { deleteCustomer, getCustomer, getCustomerSummary, isPhoneInUse, updateCustomer } from "@/lib/db";
 import { hashPassword } from "@/lib/password";
 
 function parseId(raw: string): number | null {
@@ -51,7 +51,14 @@ export async function PATCH(
     update.address = v;
   }
   if (body.phone !== undefined) {
-    update.phone = body.phone ? String(body.phone).trim() : null;
+    const v = body.phone ? String(body.phone).trim() : null;
+    if (v && (await isPhoneInUse(v, { customerId: id }))) {
+      return NextResponse.json(
+        { error: "This phone number is already used by another employee or customer account." },
+        { status: 409 }
+      );
+    }
+    update.phone = v;
   }
   if (body.password) {
     const existing = await getCustomer(id);

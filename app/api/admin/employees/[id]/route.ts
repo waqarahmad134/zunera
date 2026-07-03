@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { deleteEmployee, getEmployee, updateEmployee } from "@/lib/db";
+import { deleteEmployee, getEmployee, isPhoneInUse, updateEmployee } from "@/lib/db";
 import { EMPLOYEE_STATUSES, type EmployeeStatus } from "@/lib/employees";
 import { hashPassword } from "@/lib/password";
 
@@ -36,7 +36,14 @@ export async function PATCH(
     update.name = v;
   }
   if (body.phone !== undefined) {
-    update.phone = body.phone ? String(body.phone).trim() : null;
+    const v = body.phone ? String(body.phone).trim() : null;
+    if (v && (await isPhoneInUse(v, { employeeId: id }))) {
+      return NextResponse.json(
+        { error: "This phone number is already used by another employee or customer account." },
+        { status: 409 }
+      );
+    }
+    update.phone = v;
   }
   if (body.role !== undefined) {
     const v = String(body.role).trim();
