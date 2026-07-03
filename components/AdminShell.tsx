@@ -127,7 +127,21 @@ export default function AdminShell({
                   <X size={18} />
                 </button>
               </div>
-              <NavLinks onNavigate={() => setMobileNavOpen(false)} />
+              <div className="flex-1 overflow-y-auto">
+                <NavLinks onNavigate={() => setMobileNavOpen(false)} />
+              </div>
+              <div className="border-t border-line p-3">
+                <button
+                  onClick={() => {
+                    setMobileNavOpen(false);
+                    logout();
+                  }}
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink-soft hover:bg-paper-soft hover:text-ink transition-colors"
+                >
+                  <LogOut size={17} className="text-ink-soft/70" />
+                  Log out
+                </button>
+              </div>
             </div>
           </div>
         )}

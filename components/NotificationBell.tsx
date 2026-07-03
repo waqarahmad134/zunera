@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bell, BellRing, Check } from "lucide-react";
+import { Bell, BellOff, BellRing, Check } from "lucide-react";
 import type { Notification } from "@/lib/notifications";
 import { VAPID_PUBLIC_KEY } from "@/lib/push-public-key";
 
@@ -139,7 +139,20 @@ export default function NotificationBell({ apiBase }: { apiBase: string }) {
                 <Check size={12} /> Push on
               </span>
             )}
+            {pushState === "denied" && (
+              <span className="inline-flex items-center gap-1 text-xs text-amber-700">
+                <BellOff size={12} /> Blocked
+              </span>
+            )}
           </div>
+          {pushState === "denied" && (
+            <div className="border-b border-line bg-amber-50 px-4 py-2.5 text-xs text-amber-800">
+              Push notifications are blocked for this site. To turn them back
+              on, open your browser&apos;s site settings for this page
+              (usually via the lock or info icon next to the address bar),
+              allow notifications, then reload the page.
+            </div>
+          )}
           <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (
               <p className="p-6 text-center text-sm text-ink-soft">No notifications yet.</p>
