@@ -96,6 +96,23 @@ npm run db:migrate    # once, or after adding a new migration
 npm run deploy         # opennextjs-cloudflare build + deploy
 ```
 
+## Auto-deploy on push (GitHub Actions)
+
+Every push to `jubilee-water` runs `.github/workflows/deploy.yml`: it applies
+any new D1 migrations, then builds and deploys the Worker. One-time setup:
+
+1. Create a Cloudflare API token: **dash.cloudflare.com → My Profile → API
+   Tokens → Create Token**. The "Edit Cloudflare Workers" template covers
+   Workers + D1; if using a custom token, grant **Workers Scripts: Edit**
+   and **D1: Edit** for your account.
+2. In the GitHub repo: **Settings → Secrets and variables → Actions → New
+   repository secret**, name it `CLOUDFLARE_API_TOKEN`, paste the token.
+3. Push to `jubilee-water` — check the **Actions** tab for the run.
+
+`ADMIN_PASSWORD` is a Worker secret, not a repo secret — it's set once via
+`wrangler secret put ADMIN_PASSWORD` (see above) and persists across
+deploys; the workflow doesn't need to touch it.
+
 ## Regenerating binding types
 
 After changing `wrangler.jsonc`:
