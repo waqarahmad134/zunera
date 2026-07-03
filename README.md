@@ -96,6 +96,16 @@ npm run db:migrate    # once, or after adding a new migration
 npm run deploy         # opennextjs-cloudflare build + deploy
 ```
 
+> **Do not run `npm run deploy` (or `preview`) from native Windows
+> (PowerShell/cmd).** OpenNext's Cloudflare adapter is not fully compatible
+> with Windows — building there bakes broken chunk paths into the Worker,
+> which surfaces in production as `Internal Server Error` with
+> `ChunkLoadError` / `components.ComponentMod.handler is not a function` in
+> the Cloudflare dashboard's Logs. It deploys "successfully" (no error at
+> deploy time) but the running Worker is broken. If you're on Windows, either
+> deploy exclusively through GitHub Actions below (build runs on Linux), or
+> run these commands inside **WSL2**, never a native Windows shell.
+
 ## Auto-deploy on push (GitHub Actions)
 
 Every push to `jubilee-water` runs `.github/workflows/deploy.yml`: it applies
