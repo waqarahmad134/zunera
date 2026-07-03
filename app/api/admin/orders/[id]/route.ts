@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cached } from "@/lib/api-cache";
 import { deleteOrder, getCustomer, getEmployee, getOrder, updateOrder } from "@/lib/db";
 import { notify } from "@/lib/notify";
 import { STATUSES, type OrderStatus } from "@/lib/orders";
@@ -17,7 +18,7 @@ export async function GET(
 
   const order = await getOrder(id);
   if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
-  return NextResponse.json({ order });
+  return cached(NextResponse.json({ order }), 8);
 }
 
 export async function PATCH(

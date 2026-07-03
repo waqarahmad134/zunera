@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cached } from "@/lib/api-cache";
 import { createOrder, getCustomer, getEmployee, listOrders } from "@/lib/db";
 import { notify } from "@/lib/notify";
 import { STATUSES, type OrderStatus } from "@/lib/orders";
@@ -22,7 +23,7 @@ export async function GET(req: NextRequest) {
       search: search || undefined,
       customerId,
     });
-    return NextResponse.json({ orders });
+    return cached(NextResponse.json({ orders }), 8);
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Could not load orders" },

@@ -15,7 +15,9 @@ export default function StaffPage() {
   const [updatingId, setUpdatingId] = useState<number | null>(null);
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/staff/orders");
+    // no-store: runs right after the employee updates a status, so they
+    // see it reflected immediately instead of a cached pre-update response.
+    const res = await fetch("/api/staff/orders", { cache: "no-store" });
     if (res.ok) setOrders((await res.json()).orders);
   }, []);
 

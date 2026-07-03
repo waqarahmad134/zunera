@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cached } from "@/lib/api-cache";
 import { createEmployee, listEmployees } from "@/lib/db";
 import { EMPLOYEE_STATUSES, type EmployeeStatus } from "@/lib/employees";
 import { hashPassword } from "@/lib/password";
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
       status: (status as EmployeeStatus) || undefined,
       search: search || undefined,
     });
-    return NextResponse.json({ employees });
+    return cached(NextResponse.json({ employees }), 20);
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Could not load employees" },

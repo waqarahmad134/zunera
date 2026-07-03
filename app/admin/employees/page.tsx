@@ -37,7 +37,9 @@ export default function EmployeesPage() {
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   async function load() {
-    const res = await fetch("/api/admin/employees");
+    // no-store: runs right after a create/update/delete, so the change is
+    // reflected immediately instead of showing a cached pre-edit response.
+    const res = await fetch("/api/admin/employees", { cache: "no-store" });
     if (res.ok) setEmployees((await res.json()).employees);
   }
 

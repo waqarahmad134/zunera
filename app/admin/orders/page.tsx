@@ -45,7 +45,10 @@ export default function OrdersPage() {
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/admin/orders");
+    // no-store: this runs right after a create/update/delete, so the
+    // admin who just made the change must see it immediately, not a
+    // response cached from before their edit.
+    const res = await fetch("/api/admin/orders", { cache: "no-store" });
     if (res.ok) setOrders((await res.json()).orders);
   }, []);
 

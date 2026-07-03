@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cached } from "@/lib/api-cache";
 import { createCustomer, listCustomers } from "@/lib/db";
 import { hashPassword } from "@/lib/password";
 
@@ -6,7 +7,7 @@ export async function GET(req: NextRequest) {
   const search = req.nextUrl.searchParams.get("search");
   try {
     const customers = await listCustomers(search || undefined);
-    return NextResponse.json({ customers });
+    return cached(NextResponse.json({ customers }), 20);
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Could not load customers" },

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cached } from "@/lib/api-cache";
 import { getReport } from "@/lib/db";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const report = await getReport(from, to);
-    return NextResponse.json(report);
+    return cached(NextResponse.json(report), 20);
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Could not load report" },

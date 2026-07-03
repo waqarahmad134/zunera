@@ -29,7 +29,9 @@ export default function ExpensesPage() {
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/admin/expenses");
+    // no-store: runs right after a create/update/delete, so the change is
+    // reflected immediately instead of showing a cached pre-edit response.
+    const res = await fetch("/api/admin/expenses", { cache: "no-store" });
     if (res.ok) setExpenses((await res.json()).expenses);
   }, []);
 

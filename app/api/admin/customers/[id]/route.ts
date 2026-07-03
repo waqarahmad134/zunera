@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cached } from "@/lib/api-cache";
 import { deleteCustomer, getCustomer, getCustomerSummary, updateCustomer } from "@/lib/db";
 import { hashPassword } from "@/lib/password";
 
@@ -17,7 +18,7 @@ export async function GET(
   const customer = await getCustomer(id);
   if (!customer) return NextResponse.json({ error: "Customer not found" }, { status: 404 });
   const summary = await getCustomerSummary(id);
-  return NextResponse.json({ customer, summary });
+  return cached(NextResponse.json({ customer, summary }), 15);
 }
 
 export async function PATCH(

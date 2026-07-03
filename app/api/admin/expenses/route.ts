@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cached } from "@/lib/api-cache";
 import { createExpense, listExpenses } from "@/lib/db";
 import { EXPENSE_CATEGORIES, type ExpenseCategory } from "@/lib/expenses";
 
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
       category: (category as ExpenseCategory) || undefined,
       search: search || undefined,
     });
-    return NextResponse.json({ expenses });
+    return cached(NextResponse.json({ expenses }), 20);
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Could not load expenses" },

@@ -13,7 +13,9 @@ export default function CustomersPage() {
   const [search, setSearch] = useState("");
 
   async function load() {
-    const res = await fetch("/api/admin/customers");
+    // no-store: runs right after a delete, so it's reflected immediately
+    // instead of showing a cached pre-delete response.
+    const res = await fetch("/api/admin/customers", { cache: "no-store" });
     if (res.ok) setCustomers((await res.json()).customers);
   }
 

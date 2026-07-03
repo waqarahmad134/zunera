@@ -3,6 +3,7 @@
 // scoping comes entirely from the verified session, never from the client.
 import "server-only";
 import { NextResponse } from "next/server";
+import { cached } from "./api-cache";
 import { getCurrentSession } from "./current-session";
 import { listNotifications, markNotificationsRead, unreadNotificationCount, type NotificationRecipient } from "./db";
 
@@ -15,7 +16,7 @@ export async function handleNotificationsGet(): Promise<NextResponse> {
     listNotifications(recipient),
     unreadNotificationCount(recipient),
   ]);
-  return NextResponse.json({ notifications, unread });
+  return cached(NextResponse.json({ notifications, unread }), 5);
 }
 
 export async function handleNotificationsMarkRead(): Promise<NextResponse> {

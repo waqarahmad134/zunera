@@ -1,6 +1,7 @@
 // customerId comes strictly from the verified session — never from a
 // client-supplied parameter — so one customer can never read another's data.
 import { NextResponse } from "next/server";
+import { cached } from "@/lib/api-cache";
 import { getCurrentSession } from "@/lib/current-session";
 import { getCustomer, getCustomerSummary, listOrders } from "@/lib/db";
 
@@ -17,5 +18,5 @@ export async function GET() {
     getCustomerSummary(session.id),
     listOrders({ customerId: session.id }),
   ]);
-  return NextResponse.json({ customer, summary, orders });
+  return cached(NextResponse.json({ customer, summary, orders }), 10);
 }
