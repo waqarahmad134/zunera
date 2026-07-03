@@ -1,0 +1,26 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "jubilee-water",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-03-25",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "binding": "ASSETS",
+    "directory": ".open-next/assets"
+  },
+  "observability": {
+    "enabled": true
+  },
+  // Create once with: wrangler d1 create jubilee-water
+  // then paste the printed database_id below.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "jubilee-water",
+      "database_id": "55bdc8da-b0c3-4b5c-9702-fdb727f27876",
+      "migrations_dir": "migrations"
+    }
+  ]
+  // ADMIN_PASSWORD is a secret, not a var. Set it with:
+  //   wrangler secret put ADMIN_PASSWORD
+}
