@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { deleteOrder, getOrder, updateOrder } from "@/lib/db";
+import { deleteOrder, getCustomer, getOrder, updateOrder } from "@/lib/db";
 import { STATUSES, type OrderStatus } from "@/lib/orders";
 
 function parseId(raw: string): number | null {
@@ -32,17 +32,23 @@ export async function PATCH(
   }
 
   const update: {
-    customerName?: string;
+    customerId?: number;
     address?: string;
     bottles?: number;
     ratePerBottle?: number;
     status?: OrderStatus;
   } = {};
 
-  if (body.customerName !== undefined) {
-    const v = String(body.customerName).trim();
-    if (!v) return NextResponse.json({ error: "Customer name cannot be empty." }, { status: 400 });
-    update.customerName = v;
+  if (body.customerId !== undefined) {
+    const v = Number(body.customerId);
+    if (!Number.isInteger(v) || v <= 0) {
+      return NextResponse.json({ error: "Invalid customer." }, { status: 400 });
+    }
+    const customer = await getCustomer(v);
+    if (!customer) {
+      return NextResponse.json({ error: "That customer no longer exists." }, { status: 400 });
+    }
+    update.customerId = v;
   }
   if (body.address !== undefined) {
     const v = String(body.address).trim();

@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Check, Loader2, Save, TriangleAlert } from "lucide-react";
 import AdminShell from "@/components/AdminShell";
 import OrderForm, { type OrderFormValue } from "@/components/OrderForm";
 
 const EMPTY: OrderFormValue = {
-  customerName: "",
+  customer: null,
   address: "",
   bottles: "",
   ratePerBottle: "",
@@ -16,14 +16,48 @@ const EMPTY: OrderFormValue = {
 };
 
 export default function NewOrderPage() {
+  return (
+    <Suspense
+      fallback={
+        <AdminShell title="New order">
+          <div className="flex items-center gap-2 text-sm text-ink-soft">
+            <Loader2 size={16} className="animate-spin" /> Loading...
+          </div>
+        </AdminShell>
+      }
+    >
+      <NewOrderForm />
+    </Suspense>
+  );
+}
+
+function NewOrderForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [form, setForm] = useState<OrderFormValue>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
+  // Support arriving from a customer's detail page with them pre-selected.
+  useEffect(() => {
+    const customerId = searchParams.get("customerId");
+    if (!customerId) return;
+    fetch(`/api/admin/customers/${customerId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.customer) {
+          setForm((f) => ({ ...f, customer: d.customer, address: d.customer.address }));
+        }
+      });
+  }, [searchParams]);
+
   async function save() {
-    if (!form.customerName.trim() || !form.address.trim()) {
-      setMsg({ ok: false, text: "Customer name and address are required." });
+    if (!form.customer) {
+      setMsg({ ok: false, text: "Select a customer." });
+      return;
+    }
+    if (!form.address.trim()) {
+      setMsg({ ok: false, text: "Delivery address is required." });
       return;
     }
     if (!form.bottles || Number(form.bottles) <= 0) {
@@ -42,7 +76,7 @@ export default function NewOrderPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          customerName: form.customerName.trim(),
+          customerId: form.customer.id,
           address: form.address.trim(),
           bottles: form.bottles,
           ratePerBottle: form.ratePerBottle,

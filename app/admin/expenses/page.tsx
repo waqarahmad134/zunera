@@ -7,53 +7,38 @@ import {
 } from "lucide-react";
 import AdminShell from "@/components/AdminShell";
 import Drawer from "@/components/Drawer";
-import OrderForm, { type OrderFormValue } from "@/components/OrderForm";
-import StatusBadge from "@/components/StatusBadge";
-import { formatCurrency, formatDate, type Order, type OrderStatus } from "@/lib/orders";
+import ExpenseForm, { type ExpenseFormValue } from "@/components/ExpenseForm";
+import {
+  EXPENSE_CATEGORIES, EXPENSE_CATEGORY_LABELS, type Expense, type ExpenseCategory,
+} from "@/lib/expenses";
+import { formatCurrency, formatDate } from "@/lib/orders";
 
-type Tab = "all" | OrderStatus;
+type Tab = "all" | ExpenseCategory;
 
-function toFormValue(o: Order): OrderFormValue {
-  return {
-    // Synthesized from the order's own denormalized fields — good enough to
-    // display in the picker's "selected" chip without an extra fetch. The
-    // address shown here is this order's delivery address, which may differ
-    // from the customer's own saved address if it was overridden.
-    customer: {
-      id: o.customerId,
-      name: o.customerName,
-      phone: null,
-      address: o.address,
-      createdAt: "",
-      updatedAt: "",
-    },
-    address: o.address,
-    bottles: o.bottles,
-    ratePerBottle: o.ratePerBottle,
-    status: o.status,
-  };
+function toFormValue(e: Expense): ExpenseFormValue {
+  return { title: e.title, category: e.category, amount: e.amount, expenseDate: e.expenseDate };
 }
 
-export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[] | null>(null);
+export default function ExpensesPage() {
+  const [expenses, setExpenses] = useState<Expense[] | null>(null);
   const [tab, setTab] = useState<Tab>("all");
   const [search, setSearch] = useState("");
   const [openId, setOpenId] = useState<number | null>(null);
-  const [form, setForm] = useState<OrderFormValue | null>(null);
+  const [form, setForm] = useState<ExpenseFormValue | null>(null);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/admin/orders");
-    if (res.ok) setOrders((await res.json()).orders);
+    const res = await fetch("/api/admin/expenses");
+    if (res.ok) setExpenses((await res.json()).expenses);
   }, []);
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/admin/orders")
-      .then((r) => (r.ok ? r.json() : { orders: [] }))
+    fetch("/api/admin/expenses")
+      .then((r) => (r.ok ? r.json() : { expenses: [] }))
       .then((d) => {
-        if (!cancelled) setOrders(d.orders);
+        if (!cancelled) setExpenses(d.expenses);
       });
     return () => {
       cancelled = true;
@@ -61,27 +46,33 @@ export default function OrdersPage() {
   }, []);
 
   const filtered = useMemo(() => {
-    if (!orders) return [];
+    if (!expenses) return [];
     const q = search.trim().toLowerCase();
-    return orders.filter((o) => {
-      if (tab !== "all" && o.status !== tab) return false;
-      if (q && !o.customerName.toLowerCase().includes(q) && !o.address.toLowerCase().includes(q))
-        return false;
+    return expenses.filter((e) => {
+      if (tab !== "all" && e.category !== tab) return false;
+      if (q && !e.title.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [orders, tab, search]);
+  }, [expenses, tab, search]);
 
   const counts = useMemo(() => {
-    const c: Record<Tab, number> = { all: orders?.length ?? 0, pending: 0, delivered: 0, cancelled: 0 };
-    for (const o of orders ?? []) c[o.status]++;
+    const c: Record<Tab, number> = {
+      all: expenses?.length ?? 0,
+      fuel: 0,
+      stock: 0,
+      salaries: 0,
+      maintenance: 0,
+      other: 0,
+    };
+    for (const e of expenses ?? []) c[e.category]++;
     return c;
-  }, [orders]);
+  }, [expenses]);
 
-  const openOrder = openId !== null ? orders?.find((o) => o.id === openId) ?? null : null;
+  const openExpense = openId !== null ? expenses?.find((e) => e.id === openId) ?? null : null;
 
-  function openDrawer(o: Order) {
-    setOpenId(o.id);
-    setForm(toFormValue(o));
+  function openDrawer(e: Expense) {
+    setOpenId(e.id);
+    setForm(toFormValue(e));
     setMsg(null);
   }
 
@@ -91,23 +82,22 @@ export default function OrdersPage() {
   }
 
   async function save() {
-    if (!openOrder || !form) return;
-    if (!form.customer || !form.address.trim()) {
-      setMsg({ ok: false, text: "Customer and address are required." });
+    if (!openExpense || !form) return;
+    if (!form.title.trim()) {
+      setMsg({ ok: false, text: "Title is required." });
       return;
     }
     setSaving(true);
     setMsg(null);
     try {
-      const res = await fetch(`/api/admin/orders/${openOrder.id}`, {
+      const res = await fetch(`/api/admin/expenses/${openExpense.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          customerId: form.customer.id,
-          address: form.address.trim(),
-          bottles: form.bottles,
-          ratePerBottle: form.ratePerBottle,
-          status: form.status,
+          title: form.title.trim(),
+          category: form.category,
+          amount: form.amount,
+          expenseDate: form.expenseDate,
         }),
       });
       const body = await res.json().catch(() => ({}));
@@ -124,9 +114,9 @@ export default function OrdersPage() {
     }
   }
 
-  async function remove(o: Order) {
-    if (!confirm(`Delete the order for “${o.customerName}”? This cannot be undone.`)) return;
-    const res = await fetch(`/api/admin/orders/${o.id}`, { method: "DELETE" });
+  async function remove(e: Expense) {
+    if (!confirm(`Delete “${e.title}”? This cannot be undone.`)) return;
+    const res = await fetch(`/api/admin/expenses/${e.id}`, { method: "DELETE" });
     if (res.ok) {
       closeDrawer();
       await load();
@@ -135,22 +125,18 @@ export default function OrdersPage() {
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "all", label: "All" },
-    { id: "pending", label: "Pending" },
-    { id: "delivered", label: "Delivered" },
-    { id: "cancelled", label: "Cancelled" },
+    ...EXPENSE_CATEGORIES.map((c) => ({ id: c as Tab, label: EXPENSE_CATEGORY_LABELS[c] })),
   ];
 
   return (
-    <AdminShell title="Orders">
+    <AdminShell title="Expenses">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Orders</h1>
-          <p className="mt-1.5 text-sm text-ink-soft">
-            Every bottle order placed with Jubilee Water.
-          </p>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Expenses</h1>
+          <p className="mt-1.5 text-sm text-ink-soft">Business costs — fuel, stock, salaries and more.</p>
         </div>
         <Link
-          href="/admin/orders/new"
+          href="/admin/expenses/new"
           className="inline-flex items-center gap-2 rounded-xl bg-accent text-white px-4 py-2.5 text-sm font-medium hover:bg-accent-deep transition-colors"
         >
           <Plus size={15} /> Add new
@@ -179,22 +165,22 @@ export default function OrdersPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search name or address"
+            placeholder="Search title"
             className="w-full rounded-xl border border-line bg-white pl-9 pr-3 py-2 text-sm outline-none focus:border-accent transition-colors"
           />
         </div>
       </div>
 
       <div className="mt-5 rounded-2xl border border-line bg-white overflow-hidden">
-        {orders === null ? (
+        {expenses === null ? (
           <div className="flex items-center gap-2 p-10 text-sm text-ink-soft">
             <Loader2 size={16} className="animate-spin" /> Loading...
           </div>
         ) : filtered.length === 0 ? (
           <p className="p-10 text-center text-sm text-ink-soft">
-            {orders.length === 0
-              ? "No orders yet. Use “Add new” to create the first one."
-              : "No orders match this filter."}
+            {expenses.length === 0
+              ? "No expenses yet. Use “Add new” to log the first one."
+              : "No expenses match this filter."}
           </p>
         ) : (
           <div className="overflow-x-auto">
@@ -202,19 +188,13 @@ export default function OrdersPage() {
               <thead>
                 <tr className="border-b border-line bg-paper-soft/60">
                   <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
-                    Customer
+                    Title
                   </th>
                   <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
-                    Address
+                    Category
                   </th>
                   <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-ink-soft whitespace-nowrap">
-                    Bottles
-                  </th>
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-ink-soft whitespace-nowrap">
-                    Total
-                  </th>
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-ink-soft whitespace-nowrap">
-                    Status
+                    Amount
                   </th>
                   <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-ink-soft whitespace-nowrap">
                     Date
@@ -223,40 +203,26 @@ export default function OrdersPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((o) => (
+                {filtered.map((e) => (
                   <tr
-                    key={o.id}
-                    onClick={() => openDrawer(o)}
+                    key={e.id}
+                    onClick={() => openDrawer(e)}
                     className="cursor-pointer border-b border-line last:border-0 hover:bg-paper-soft/60 transition-colors"
                   >
-                    <td className="px-4 py-3 font-medium max-w-[180px] truncate">
-                      <Link
-                        href={`/admin/customers/${o.customerId}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="hover:text-accent transition-colors"
-                      >
-                        {o.customerName}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 text-ink-soft max-w-[240px] truncate" title={o.address}>
-                      {o.address}
-                    </td>
-                    <td className="px-4 py-3 tabular-nums">{o.bottles}</td>
-                    <td className="px-4 py-3 tabular-nums font-medium">
-                      {formatCurrency(o.totalPrice)}
-                    </td>
+                    <td className="px-4 py-3 font-medium max-w-[260px] truncate">{e.title}</td>
                     <td className="px-4 py-3">
-                      <StatusBadge status={o.status} />
+                      <span className="inline-flex rounded-full border border-line bg-paper-soft px-2.5 py-0.5 text-xs font-medium text-ink-soft">
+                        {EXPENSE_CATEGORY_LABELS[e.category]}
+                      </span>
                     </td>
-                    <td className="px-4 py-3 text-ink-soft whitespace-nowrap">
-                      {formatDate(o.createdAt)}
-                    </td>
+                    <td className="px-4 py-3 tabular-nums font-medium">{formatCurrency(e.amount)}</td>
+                    <td className="px-4 py-3 text-ink-soft whitespace-nowrap">{formatDate(e.expenseDate)}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-0.5">
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            remove(o);
+                          onClick={(ev) => {
+                            ev.stopPropagation();
+                            remove(e);
                           }}
                           title="Delete"
                           className="p-1.5 text-ink-soft hover:text-red-600 transition-colors"
@@ -275,14 +241,14 @@ export default function OrdersPage() {
       </div>
 
       <Drawer
-        open={openOrder !== null}
+        open={openExpense !== null}
         onClose={closeDrawer}
-        title={openOrder?.customerName || ""}
-        subtitle={openOrder ? `Order #${openOrder.id} · ${formatDate(openOrder.createdAt)}` : undefined}
+        title={openExpense?.title || ""}
+        subtitle={openExpense ? `Expense #${openExpense.id}` : undefined}
         footer={
           <>
             <button
-              onClick={() => openOrder && remove(openOrder)}
+              onClick={() => openExpense && remove(openExpense)}
               className="inline-flex items-center gap-1.5 rounded-xl border border-line px-3.5 py-2 text-sm text-ink-soft hover:border-red-300 hover:text-red-600 transition-colors"
             >
               <Trash2 size={14} /> Delete
@@ -310,7 +276,7 @@ export default function OrdersPage() {
           </>
         }
       >
-        {form && <OrderForm value={form} onChange={setForm} />}
+        {form && <ExpenseForm value={form} onChange={setForm} />}
       </Drawer>
     </AdminShell>
   );

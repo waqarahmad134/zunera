@@ -5,7 +5,10 @@ export type OrderStatus = "pending" | "delivered" | "cancelled";
 
 export interface Order {
   id: number;
+  customerId: number;
+  /** Denormalized from the customer record for display, via join. */
   customerName: string;
+  /** Per-order delivery address — defaults from the customer but is editable per order. */
   address: string;
   bottles: number;
   ratePerBottle: number;
@@ -17,7 +20,7 @@ export interface Order {
 
 /** Fields the client sends when creating an order (id/total/timestamps are server-assigned). */
 export interface NewOrderInput {
-  customerName: string;
+  customerId: number;
   address: string;
   bottles: number;
   ratePerBottle: number;

@@ -1,9 +1,11 @@
 "use client";
 
+import CustomerPicker from "@/components/CustomerPicker";
+import type { Customer } from "@/lib/customers";
 import { STATUSES, STATUS_META, formatCurrency, type OrderStatus } from "@/lib/orders";
 
 export interface OrderFormValue {
-  customerName: string;
+  customer: Customer | null;
   address: string;
   bottles: number | "";
   ratePerBottle: number | "";
@@ -28,13 +30,10 @@ export default function OrderForm({
   return (
     <div className="grid gap-4">
       <div>
-        <label className={labelClass}>Customer name</label>
-        <input
-          type="text"
-          value={value.customerName}
-          onChange={(e) => onChange({ ...value, customerName: e.target.value })}
-          placeholder="Jane Doe"
-          className={inputClass}
+        <label className={labelClass}>Customer</label>
+        <CustomerPicker
+          value={value.customer}
+          onSelect={(customer) => onChange({ ...value, customer, address: customer.address })}
         />
       </div>
 
@@ -47,6 +46,9 @@ export default function OrderForm({
           rows={3}
           className={`${inputClass} resize-y leading-relaxed`}
         />
+        <p className="mt-1.5 text-xs text-ink-soft/80">
+          Filled in from the customer — edit here for a one-off delivery elsewhere.
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">

@@ -1,19 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createOrder, listOrders } from "@/lib/db";
+import { createOrder, getCustomer, listOrders } from "@/lib/db";
 import { STATUSES, type OrderStatus } from "@/lib/orders";
 
 export async function GET(req: NextRequest) {
   const status = req.nextUrl.searchParams.get("status");
   const search = req.nextUrl.searchParams.get("search");
+  const customerIdRaw = req.nextUrl.searchParams.get("customerId");
 
   if (status && !STATUSES.includes(status as OrderStatus)) {
     return NextResponse.json({ error: "Invalid status filter" }, { status: 400 });
+  }
+  const customerId = customerIdRaw ? Number(customerIdRaw) : undefined;
+  if (customerIdRaw && (!Number.isInteger(customerId) || customerId! <= 0)) {
+    return NextResponse.json({ error: "Invalid customerId filter" }, { status: 400 });
   }
 
   try {
     const orders = await listOrders({
       status: (status as OrderStatus) || undefined,
       search: search || undefined,
+      customerId,
     });
     return NextResponse.json({ orders });
   } catch (e) {
@@ -27,17 +33,17 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
 
-  const customerName = String(body?.customerName ?? "").trim();
+  const customerId = Number(body?.customerId);
   const address = String(body?.address ?? "").trim();
   const bottles = Number(body?.bottles);
   const ratePerBottle = Number(body?.ratePerBottle);
   const status = (body?.status || "pending") as OrderStatus;
 
-  if (!customerName || !address) {
-    return NextResponse.json(
-      { error: "Customer name and address are required." },
-      { status: 400 }
-    );
+  if (!Number.isInteger(customerId) || customerId <= 0) {
+    return NextResponse.json({ error: "Select a customer for this order." }, { status: 400 });
+  }
+  if (!address) {
+    return NextResponse.json({ error: "Delivery address is required." }, { status: 400 });
   }
   if (!Number.isFinite(bottles) || bottles <= 0 || !Number.isInteger(bottles)) {
     return NextResponse.json(
@@ -56,7 +62,11 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const order = await createOrder({ customerName, address, bottles, ratePerBottle, status });
+    const customer = await getCustomer(customerId);
+    if (!customer) {
+      return NextResponse.json({ error: "That customer no longer exists." }, { status: 400 });
+    }
+    const order = await createOrder({ customerId, address, bottles, ratePerBottle, status });
     return NextResponse.json({ order }, { status: 201 });
   } catch (e) {
     return NextResponse.json(

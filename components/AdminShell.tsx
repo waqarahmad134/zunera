@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { LayoutDashboard, ListOrdered, LogOut, Menu, X, Droplets } from "lucide-react";
+import {
+  LayoutDashboard, ListOrdered, LogOut, Menu, X, Droplets, Users, Receipt, BarChart3,
+} from "lucide-react";
 
 function Logo() {
   return (
@@ -16,6 +18,9 @@ function Logo() {
 const NAV = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/orders", label: "Orders", icon: ListOrdered },
+  { href: "/admin/customers", label: "Customers", icon: Users },
+  { href: "/admin/expenses", label: "Expenses", icon: Receipt },
+  { href: "/admin/reports", label: "Reports", icon: BarChart3 },
 ];
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
