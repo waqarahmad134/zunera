@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 import CustomerPicker from "@/components/CustomerPicker";
 import type { Customer } from "@/lib/customers";
 import type { Employee } from "@/lib/employees";
-import { STATUSES, STATUS_META, formatCurrency, type OrderStatus } from "@/lib/orders";
+import {
+  PAYMENT_STATUSES, PAYMENT_STATUS_META, STATUSES, STATUS_META,
+  formatCurrency, type OrderStatus, type PaymentStatus,
+} from "@/lib/orders";
 
 export interface OrderFormValue {
   customer: Customer | null;
@@ -12,6 +15,7 @@ export interface OrderFormValue {
   bottles: number | "";
   ratePerBottle: number | "";
   status: OrderStatus;
+  paymentStatus: PaymentStatus;
   assignedEmployeeId: number | null;
 }
 
@@ -22,9 +26,14 @@ const labelClass = "block text-xs font-semibold tracking-wide uppercase text-ink
 export default function OrderForm({
   value,
   onChange,
+  statusLockedByEmployee = false,
+  paymentLockedByEmployee = false,
 }: {
   value: OrderFormValue;
   onChange: (next: OrderFormValue) => void;
+  /** Informational only — admin is never blocked, unlike the staff app. */
+  statusLockedByEmployee?: boolean;
+  paymentLockedByEmployee?: boolean;
 }) {
   const [employees, setEmployees] = useState<Employee[] | null>(null);
 
@@ -166,6 +175,43 @@ export default function OrderForm({
             );
           })}
         </div>
+        {statusLockedByEmployee && (
+          <p className="mt-1.5 text-xs text-ink-soft/80">
+            An employee already set this once, so they can&apos;t change it again — you still can.
+          </p>
+        )}
+      </div>
+
+      <div>
+        <label className={labelClass}>Payment</label>
+        <div className="flex flex-wrap gap-2">
+          {PAYMENT_STATUSES.map((s) => {
+            const active = value.paymentStatus === s;
+            const meta = PAYMENT_STATUS_META[s];
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => onChange({ ...value, paymentStatus: s })}
+                style={
+                  active
+                    ? { background: meta.bg, borderColor: meta.color, color: meta.color }
+                    : undefined
+                }
+                className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${
+                  active ? "" : "border-line text-ink-soft hover:border-ink-soft"
+                }`}
+              >
+                {meta.label}
+              </button>
+            );
+          })}
+        </div>
+        {paymentLockedByEmployee && (
+          <p className="mt-1.5 text-xs text-ink-soft/80">
+            An employee already set this once, so they can&apos;t change it again — you still can.
+          </p>
+        )}
       </div>
     </div>
   );

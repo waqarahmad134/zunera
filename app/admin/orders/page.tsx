@@ -8,6 +8,7 @@ import {
 import AdminShell from "@/components/AdminShell";
 import Drawer from "@/components/Drawer";
 import OrderForm, { type OrderFormValue } from "@/components/OrderForm";
+import PaymentBadge from "@/components/PaymentBadge";
 import StatusBadge from "@/components/StatusBadge";
 import { formatCurrency, formatDate, type Order, type OrderStatus } from "@/lib/orders";
 
@@ -31,6 +32,7 @@ function toFormValue(o: Order): OrderFormValue {
     bottles: o.bottles,
     ratePerBottle: o.ratePerBottle,
     status: o.status,
+    paymentStatus: o.paymentStatus,
     assignedEmployeeId: o.assignedEmployeeId,
   };
 }
@@ -112,6 +114,7 @@ export default function OrdersPage() {
           bottles: form.bottles,
           ratePerBottle: form.ratePerBottle,
           status: form.status,
+          paymentStatus: form.paymentStatus,
           assignedEmployeeId: form.assignedEmployeeId,
         }),
       });
@@ -222,6 +225,9 @@ export default function OrdersPage() {
                     Status
                   </th>
                   <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-ink-soft whitespace-nowrap">
+                    Payment
+                  </th>
+                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-ink-soft whitespace-nowrap">
                     Date
                   </th>
                   <th className="px-4 py-2.5" />
@@ -252,6 +258,9 @@ export default function OrdersPage() {
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge status={o.status} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <PaymentBadge status={o.paymentStatus} />
                     </td>
                     <td className="px-4 py-3 text-ink-soft whitespace-nowrap">
                       {formatDate(o.createdAt)}
@@ -315,7 +324,14 @@ export default function OrdersPage() {
           </>
         }
       >
-        {form && <OrderForm value={form} onChange={setForm} />}
+        {form && (
+          <OrderForm
+            value={form}
+            onChange={setForm}
+            statusLockedByEmployee={openOrder?.statusLockedByEmployee}
+            paymentLockedByEmployee={openOrder?.paymentLockedByEmployee}
+          />
+        )}
       </Drawer>
     </AdminShell>
   );

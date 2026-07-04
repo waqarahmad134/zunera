@@ -1,7 +1,7 @@
 // D1 data-access layer.
 import "server-only";
 import { getEnv } from "./cf";
-import type { NewOrderInput, Order, OrderStatus } from "./orders";
+import type { NewOrderInput, Order, OrderStatus, PaymentStatus } from "./orders";
 import type { Customer, CustomerSummary, NewCustomerInput } from "./customers";
 import type { Expense, ExpenseCategory, NewExpenseInput } from "./expenses";
 import type { Employee, EmployeeStatus, NewEmployeeInput } from "./employees";
@@ -22,8 +22,11 @@ interface OrderRow {
   rate_per_bottle: number;
   total_price: number;
   status: OrderStatus;
+  payment_status: PaymentStatus;
   assigned_employee_id: number | null;
   assigned_employee_name: string | null;
+  status_locked_by_employee: number;
+  payment_locked_by_employee: number;
   created_at: string;
   updated_at: string;
 }
@@ -38,8 +41,11 @@ function toOrder(r: OrderRow): Order {
     ratePerBottle: r.rate_per_bottle,
     totalPrice: r.total_price,
     status: r.status,
+    paymentStatus: r.payment_status,
     assignedEmployeeId: r.assigned_employee_id,
     assignedEmployeeName: r.assigned_employee_name,
+    statusLockedByEmployee: !!r.status_locked_by_employee,
+    paymentLockedByEmployee: !!r.payment_locked_by_employee,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
   };
@@ -47,8 +53,9 @@ function toOrder(r: OrderRow): Order {
 
 const ORDER_SELECT = `
   SELECT o.id, o.customer_id, c.name AS customer_name, o.address, o.bottles,
-         o.rate_per_bottle, o.total_price, o.status,
+         o.rate_per_bottle, o.total_price, o.status, o.payment_status,
          o.assigned_employee_id, e.name AS assigned_employee_name,
+         o.status_locked_by_employee, o.payment_locked_by_employee,
          o.created_at, o.updated_at
   FROM orders o
   JOIN customers c ON c.id = o.customer_id
@@ -106,8 +113,8 @@ export async function createOrder(input: NewOrderInput): Promise<Order> {
   const env = await getEnv();
   const total = input.bottles * input.ratePerBottle;
   const inserted = await env.DB.prepare(
-    `INSERT INTO orders (customer_id, address, bottles, rate_per_bottle, total_price, status, assigned_employee_id)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+    `INSERT INTO orders (customer_id, address, bottles, rate_per_bottle, total_price, status, payment_status, assigned_employee_id)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
      RETURNING id`
   )
     .bind(
@@ -117,6 +124,7 @@ export async function createOrder(input: NewOrderInput): Promise<Order> {
       input.ratePerBottle,
       total,
       input.status,
+      input.paymentStatus ?? "unpaid",
       input.assignedEmployeeId ?? null
     )
     .first<{ id: number }>();
@@ -129,8 +137,12 @@ export interface OrderUpdateInput {
   bottles?: number;
   ratePerBottle?: number;
   status?: OrderStatus;
+  paymentStatus?: PaymentStatus;
   /** undefined = leave unchanged, null = unassign, number = assign to that employee. */
   assignedEmployeeId?: number | null;
+  /** Set true when an employee (not admin) is the one making this status/payment change. */
+  statusLockedByEmployee?: boolean;
+  paymentLockedByEmployee?: boolean;
 }
 
 export async function updateOrder(
@@ -153,9 +165,12 @@ export async function updateOrder(
        rate_per_bottle = ?4,
        total_price = ?5,
        status = ?6,
-       assigned_employee_id = ?7,
+       payment_status = ?7,
+       assigned_employee_id = ?8,
+       status_locked_by_employee = ?9,
+       payment_locked_by_employee = ?10,
        updated_at = datetime('now')
-     WHERE id = ?8`
+     WHERE id = ?11`
   )
     .bind(
       input.customerId ?? existing.customerId,
@@ -164,7 +179,10 @@ export async function updateOrder(
       rate,
       total,
       input.status ?? existing.status,
+      input.paymentStatus ?? existing.paymentStatus,
       input.assignedEmployeeId !== undefined ? input.assignedEmployeeId : existing.assignedEmployeeId,
+      (input.statusLockedByEmployee ?? existing.statusLockedByEmployee) ? 1 : 0,
+      (input.paymentLockedByEmployee ?? existing.paymentLockedByEmployee) ? 1 : 0,
       id
     )
     .run();

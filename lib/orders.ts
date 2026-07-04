@@ -2,6 +2,7 @@
 // server-only imports here — this module is used by client components too.
 
 export type OrderStatus = "pending" | "delivered" | "cancelled";
+export type PaymentStatus = "unpaid" | "cash" | "online";
 
 export interface Order {
   id: number;
@@ -14,9 +15,18 @@ export interface Order {
   ratePerBottle: number;
   totalPrice: number;
   status: OrderStatus;
+  paymentStatus: PaymentStatus;
   assignedEmployeeId: number | null;
   /** Denormalized from the employee record for display, via join. */
   assignedEmployeeName: string | null;
+  /**
+   * Once an employee (not admin) sets status/paymentStatus, the matching
+   * flag flips true and the staff app can never change that field on this
+   * order again — only admin can. Prevents an employee from repeatedly
+   * flip-flopping a delivery/payment outcome after the fact.
+   */
+  statusLockedByEmployee: boolean;
+  paymentLockedByEmployee: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -28,10 +38,12 @@ export interface NewOrderInput {
   bottles: number;
   ratePerBottle: number;
   status: OrderStatus;
+  paymentStatus?: PaymentStatus;
   assignedEmployeeId?: number | null;
 }
 
 export const STATUSES: OrderStatus[] = ["pending", "delivered", "cancelled"];
+export const PAYMENT_STATUSES: PaymentStatus[] = ["unpaid", "cash", "online"];
 
 // Status colors follow the dataviz "status palette" (fixed, never themed):
 // good = delivered, warning = pending, critical = cancelled.
@@ -56,6 +68,30 @@ export const STATUS_META: Record<
     color: "#d03b3b",
     bg: "rgba(208,59,59,0.10)",
     border: "rgba(208,59,59,0.30)",
+  },
+};
+
+export const PAYMENT_STATUS_META: Record<
+  PaymentStatus,
+  { label: string; color: string; bg: string; border: string }
+> = {
+  unpaid: {
+    label: "Unpaid",
+    color: "#d03b3b",
+    bg: "rgba(208,59,59,0.10)",
+    border: "rgba(208,59,59,0.30)",
+  },
+  cash: {
+    label: "Cash",
+    color: "#0ca30c",
+    bg: "rgba(12,163,12,0.10)",
+    border: "rgba(12,163,12,0.30)",
+  },
+  online: {
+    label: "Online",
+    color: "#2a78d6",
+    bg: "rgba(42,120,214,0.10)",
+    border: "rgba(42,120,214,0.30)",
   },
 };
 

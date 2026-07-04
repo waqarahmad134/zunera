@@ -13,6 +13,7 @@ const EMPTY: OrderFormValue = {
   bottles: "",
   ratePerBottle: "",
   status: "pending",
+  paymentStatus: "unpaid",
   assignedEmployeeId: null,
 };
 
@@ -82,6 +83,7 @@ function NewOrderForm() {
           bottles: form.bottles,
           ratePerBottle: form.ratePerBottle,
           status: form.status,
+          paymentStatus: form.paymentStatus,
           assignedEmployeeId: form.assignedEmployeeId,
         }),
       });

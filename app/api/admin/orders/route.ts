@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cached } from "@/lib/api-cache";
 import { createOrder, getCustomer, getEmployee, listOrders } from "@/lib/db";
 import { notify } from "@/lib/notify";
-import { STATUSES, type OrderStatus } from "@/lib/orders";
+import { PAYMENT_STATUSES, STATUSES, type OrderStatus, type PaymentStatus } from "@/lib/orders";
 
 export async function GET(req: NextRequest) {
   const status = req.nextUrl.searchParams.get("status");
@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
   const bottles = Number(body?.bottles);
   const ratePerBottle = Number(body?.ratePerBottle);
   const status = (body?.status || "pending") as OrderStatus;
+  const paymentStatus = (body?.paymentStatus || "unpaid") as PaymentStatus;
   const assignedEmployeeIdRaw = body?.assignedEmployeeId;
 
   if (!Number.isInteger(customerId) || customerId <= 0) {
@@ -63,6 +64,9 @@ export async function POST(req: NextRequest) {
   if (!STATUSES.includes(status)) {
     return NextResponse.json({ error: "Invalid status." }, { status: 400 });
   }
+  if (!PAYMENT_STATUSES.includes(paymentStatus)) {
+    return NextResponse.json({ error: "Invalid payment status." }, { status: 400 });
+  }
 
   let assignedEmployeeId: number | null = null;
   if (assignedEmployeeIdRaw) {
@@ -82,7 +86,9 @@ export async function POST(req: NextRequest) {
     if (!customer) {
       return NextResponse.json({ error: "That customer no longer exists." }, { status: 400 });
     }
-    const order = await createOrder({ customerId, address, bottles, ratePerBottle, status, assignedEmployeeId });
+    const order = await createOrder({
+      customerId, address, bottles, ratePerBottle, status, paymentStatus, assignedEmployeeId,
+    });
     if (assignedEmployeeId) {
       await notify(
         { role: "employee", id: assignedEmployeeId },

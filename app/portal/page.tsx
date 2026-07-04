@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Calendar, Loader2, Receipt, ShoppingBag, Wallet } from "lucide-react";
 import PortalShell from "@/components/PortalShell";
+import PaymentBadge from "@/components/PaymentBadge";
 import StatusBadge from "@/components/StatusBadge";
 import type { Customer, CustomerSummary } from "@/lib/customers";
 import { formatCurrency, formatDate, type Order } from "@/lib/orders";
@@ -104,6 +105,9 @@ export default function PortalPage() {
                         Status
                       </th>
                       <th className="px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
+                        Payment
+                      </th>
+                      <th className="px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
                         Date
                       </th>
                     </tr>
@@ -118,6 +122,9 @@ export default function PortalPage() {
                         <td className="px-5 py-3 tabular-nums font-medium">{formatCurrency(o.totalPrice)}</td>
                         <td className="px-5 py-3">
                           <StatusBadge status={o.status} />
+                        </td>
+                        <td className="px-5 py-3">
+                          <PaymentBadge status={o.paymentStatus} />
                         </td>
                         <td className="px-5 py-3 text-ink-soft whitespace-nowrap">{formatDate(o.createdAt)}</td>
                       </tr>

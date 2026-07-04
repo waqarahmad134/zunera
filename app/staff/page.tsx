@@ -1,10 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Lock, Search } from "lucide-react";
 import StaffShell from "@/components/StaffShell";
+import PaymentBadge from "@/components/PaymentBadge";
 import StatusBadge from "@/components/StatusBadge";
-import { STATUS_META, STATUSES, formatCurrency, formatDate, type Order, type OrderStatus } from "@/lib/orders";
+import {
+  PAYMENT_STATUSES, PAYMENT_STATUS_META, STATUS_META, STATUSES,
+  formatCurrency, formatDate, type Order, type OrderStatus, type PaymentStatus,
+} from "@/lib/orders";
 
 type Tab = "all" | OrderStatus;
 
@@ -55,15 +59,31 @@ export default function StaffPage() {
   }, [orders]);
 
   async function setStatus(order: Order, status: OrderStatus) {
-    if (status === order.status) return;
+    if (status === order.status || order.statusLockedByEmployee) return;
     setUpdatingId(order.id);
     const res = await fetch(`/api/staff/orders/${order.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
+    const body = await res.json().catch(() => ({}));
     setUpdatingId(null);
     if (res.ok) await load();
+    else alert(body.error || "Could not update status.");
+  }
+
+  async function setPayment(order: Order, paymentStatus: PaymentStatus) {
+    if (paymentStatus === order.paymentStatus || order.paymentLockedByEmployee) return;
+    setUpdatingId(order.id);
+    const res = await fetch(`/api/staff/orders/${order.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paymentStatus }),
+    });
+    const body = await res.json().catch(() => ({}));
+    setUpdatingId(null);
+    if (res.ok) await load();
+    else alert(body.error || "Could not update payment.");
   }
 
   const tabs: { id: Tab; label: string }[] = [
@@ -123,7 +143,10 @@ export default function StaffPage() {
                   <p className="font-medium">{o.customerName}</p>
                   <p className="mt-0.5 text-sm text-ink-soft">{o.address}</p>
                 </div>
-                <StatusBadge status={o.status} />
+                <div className="flex items-center gap-1.5">
+                  <StatusBadge status={o.status} />
+                  <PaymentBadge status={o.paymentStatus} />
+                </div>
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-ink-soft">
                 <span>{o.bottles} bottles</span>
@@ -131,14 +154,18 @@ export default function StaffPage() {
                 <span>{formatDate(o.createdAt)}</span>
                 {o.assignedEmployeeName && <span>Assigned: {o.assignedEmployeeName}</span>}
               </div>
-              <div className="mt-3 flex flex-wrap gap-2">
+
+              <p className="mt-4 text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
+                Delivery status
+              </p>
+              <div className="mt-1.5 flex flex-wrap items-center gap-2">
                 {STATUSES.map((s) => {
                   const active = o.status === s;
                   const meta = STATUS_META[s];
                   return (
                     <button
                       key={s}
-                      disabled={updatingId === o.id}
+                      disabled={updatingId === o.id || o.statusLockedByEmployee}
                       onClick={() => setStatus(o, s)}
                       style={active ? { background: meta.bg, borderColor: meta.color, color: meta.color } : undefined}
                       className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ${
@@ -149,6 +176,37 @@ export default function StaffPage() {
                     </button>
                   );
                 })}
+                {o.statusLockedByEmployee && (
+                  <span className="inline-flex items-center gap-1 text-xs text-ink-soft/70">
+                    <Lock size={11} /> Locked — ask admin to change it further
+                  </span>
+                )}
+              </div>
+
+              <p className="mt-4 text-[11px] font-semibold uppercase tracking-wide text-ink-soft">Payment</p>
+              <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                {PAYMENT_STATUSES.map((s) => {
+                  const active = o.paymentStatus === s;
+                  const meta = PAYMENT_STATUS_META[s];
+                  return (
+                    <button
+                      key={s}
+                      disabled={updatingId === o.id || o.paymentLockedByEmployee}
+                      onClick={() => setPayment(o, s)}
+                      style={active ? { background: meta.bg, borderColor: meta.color, color: meta.color } : undefined}
+                      className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ${
+                        active ? "" : "border-line text-ink-soft hover:border-ink-soft"
+                      }`}
+                    >
+                      {meta.label}
+                    </button>
+                  );
+                })}
+                {o.paymentLockedByEmployee && (
+                  <span className="inline-flex items-center gap-1 text-xs text-ink-soft/70">
+                    <Lock size={11} /> Locked — ask admin to change it further
+                  </span>
+                )}
               </div>
             </div>
           ))

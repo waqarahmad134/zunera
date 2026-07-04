@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { cached } from "@/lib/api-cache";
 import { deleteOrder, getCustomer, getEmployee, getOrder, updateOrder } from "@/lib/db";
 import { notify } from "@/lib/notify";
-import { STATUS_META, STATUSES, type OrderStatus } from "@/lib/orders";
+import {
+  PAYMENT_STATUSES, PAYMENT_STATUS_META, STATUS_META, STATUSES, type OrderStatus, type PaymentStatus,
+} from "@/lib/orders";
 
 function parseId(raw: string): number | null {
   const id = Number(raw);
@@ -39,6 +41,7 @@ export async function PATCH(
     bottles?: number;
     ratePerBottle?: number;
     status?: OrderStatus;
+    paymentStatus?: PaymentStatus;
     assignedEmployeeId?: number | null;
   } = {};
 
@@ -84,6 +87,12 @@ export async function PATCH(
     }
     update.status = body.status;
   }
+  if (body.paymentStatus !== undefined) {
+    if (!PAYMENT_STATUSES.includes(body.paymentStatus)) {
+      return NextResponse.json({ error: "Invalid payment status." }, { status: 400 });
+    }
+    update.paymentStatus = body.paymentStatus;
+  }
   if (body.assignedEmployeeId !== undefined) {
     if (body.assignedEmployeeId === null || body.assignedEmployeeId === "") {
       update.assignedEmployeeId = null;
@@ -124,6 +133,15 @@ export async function PATCH(
         { role: "customer", id: order.customerId },
         "Order status updated",
         `Your order #${order.id} is now ${STATUS_META[order.status].label.toLowerCase()}.`,
+        "/portal"
+      );
+    }
+
+    if (update.paymentStatus !== undefined && update.paymentStatus !== before?.paymentStatus) {
+      await notify(
+        { role: "customer", id: order.customerId },
+        "Payment updated",
+        `Payment for order #${order.id} is now marked as ${PAYMENT_STATUS_META[order.paymentStatus].label.toLowerCase()}.`,
         "/portal"
       );
     }
