@@ -34,16 +34,21 @@ export default function PortalPage() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/portal/me")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((body) => {
-        if (cancelled || !body) return;
-        setCustomer(body.customer);
-        setSummary(body.summary);
-        setOrders(body.orders);
-      });
+    async function poll() {
+      const res = await fetch("/api/portal/me").catch(() => null);
+      if (!res?.ok || cancelled) return;
+      const body = await res.json();
+      setCustomer(body.customer);
+      setSummary(body.summary);
+      setOrders(body.orders);
+    }
+    poll();
+    // Picks up status changes an admin/employee makes elsewhere — a
+    // customer shouldn't have to manually reload to see them.
+    const handle = setInterval(poll, 15000);
     return () => {
       cancelled = true;
+      clearInterval(handle);
     };
   }, []);
 

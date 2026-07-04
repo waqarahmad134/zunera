@@ -23,13 +23,18 @@ export default function StaffPage() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/staff/orders")
-      .then((r) => (r.ok ? r.json() : { orders: [] }))
-      .then((d) => {
-        if (!cancelled) setOrders(d.orders);
-      });
+    async function poll() {
+      const res = await fetch("/api/staff/orders").catch(() => null);
+      if (!res?.ok || cancelled) return;
+      const body = await res.json();
+      setOrders(body.orders);
+    }
+    poll();
+    // Picks up new assignments or admin-side changes without a manual reload.
+    const handle = setInterval(poll, 15000);
     return () => {
       cancelled = true;
+      clearInterval(handle);
     };
   }, []);
 

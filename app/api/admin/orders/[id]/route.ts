@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cached } from "@/lib/api-cache";
 import { deleteOrder, getCustomer, getEmployee, getOrder, updateOrder } from "@/lib/db";
 import { notify } from "@/lib/notify";
-import { STATUSES, type OrderStatus } from "@/lib/orders";
+import { STATUS_META, STATUSES, type OrderStatus } from "@/lib/orders";
 
 function parseId(raw: string): number | null {
   const id = Number(raw);
@@ -116,6 +116,15 @@ export async function PATCH(
         "New order assigned",
         `Order #${order.id} for ${customer?.name ?? "a customer"} — ${order.bottles} bottle${order.bottles > 1 ? "s" : ""}.`,
         "/staff"
+      );
+    }
+
+    if (update.status !== undefined && update.status !== before?.status) {
+      await notify(
+        { role: "customer", id: order.customerId },
+        "Order status updated",
+        `Your order #${order.id} is now ${STATUS_META[order.status].label.toLowerCase()}.`,
+        "/portal"
       );
     }
 

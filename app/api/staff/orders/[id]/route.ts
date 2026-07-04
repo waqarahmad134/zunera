@@ -41,6 +41,12 @@ export async function PATCH(
       `${session.name ?? "An employee"} marked order #${order.id} (${customer?.name ?? "customer"}) as ${STATUS_META[order.status].label}.`,
       "/admin/orders"
     );
+    await notify(
+      { role: "customer", id: order.customerId },
+      "Order status updated",
+      `Your order #${order.id} is now ${STATUS_META[order.status].label.toLowerCase()}.`,
+      "/portal"
+    );
 
     return NextResponse.json({ order });
   } catch (e) {
