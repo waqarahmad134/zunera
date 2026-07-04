@@ -8,6 +8,7 @@ import {
   Receipt, Save, ShoppingBag, Trash2, TriangleAlert, User, Wallet, X,
 } from "lucide-react";
 import AdminShell from "@/components/AdminShell";
+import { useDialogs } from "@/components/ConfirmProvider";
 import CustomerForm, { type CustomerFormValue } from "@/components/CustomerForm";
 import PaymentBadge from "@/components/PaymentBadge";
 import StatusBadge from "@/components/StatusBadge";
@@ -37,6 +38,7 @@ function StatTile({
 export default function CustomerDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { confirm, alertDialog } = useDialogs();
 
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [summary, setSummary] = useState<CustomerSummary | null>(null);
@@ -114,13 +116,19 @@ export default function CustomerDetailPage() {
 
   async function remove() {
     if (!customer) return;
-    if (!confirm(`Delete customer “${customer.name}”? This only works if they have no orders.`)) return;
+    const ok = await confirm({
+      title: `Delete customer "${customer.name}"?`,
+      message: "This only works if they have no orders.",
+      confirmText: "Delete",
+      danger: true,
+    });
+    if (!ok) return;
     const res = await fetch(`/api/admin/customers/${id}`, { method: "DELETE" });
     if (res.ok) {
       router.push("/admin/customers");
     } else {
       const body = await res.json().catch(() => ({}));
-      alert(body.error || "Could not delete customer.");
+      await alertDialog(body.error || "Could not delete customer.");
     }
   }
 

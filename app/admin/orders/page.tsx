@@ -6,6 +6,7 @@ import {
   Check, ChevronRight, Loader2, Plus, Save, Search, Trash2, TriangleAlert,
 } from "lucide-react";
 import AdminShell from "@/components/AdminShell";
+import { useDialogs } from "@/components/ConfirmProvider";
 import Drawer from "@/components/Drawer";
 import OrderForm, { type OrderFormValue } from "@/components/OrderForm";
 import PaymentBadge from "@/components/PaymentBadge";
@@ -38,6 +39,7 @@ function toFormValue(o: Order): OrderFormValue {
 }
 
 export default function OrdersPage() {
+  const { confirm } = useDialogs();
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [tab, setTab] = useState<Tab>("all");
   const [search, setSearch] = useState("");
@@ -133,7 +135,13 @@ export default function OrdersPage() {
   }
 
   async function remove(o: Order) {
-    if (!confirm(`Delete the order for “${o.customerName}”? This cannot be undone.`)) return;
+    const ok = await confirm({
+      title: `Delete the order for "${o.customerName}"?`,
+      message: "This cannot be undone.",
+      confirmText: "Delete",
+      danger: true,
+    });
+    if (!ok) return;
     const res = await fetch(`/api/admin/orders/${o.id}`, { method: "DELETE" });
     if (res.ok) {
       closeDrawer();

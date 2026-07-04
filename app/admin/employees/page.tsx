@@ -6,6 +6,7 @@ import {
   Check, ChevronRight, Loader2, Plus, Save, Search, Trash2, TriangleAlert,
 } from "lucide-react";
 import AdminShell from "@/components/AdminShell";
+import { useDialogs } from "@/components/ConfirmProvider";
 import Drawer from "@/components/Drawer";
 import EmployeeForm, { type EmployeeFormValue } from "@/components/EmployeeForm";
 import {
@@ -28,6 +29,7 @@ function toFormValue(e: Employee): EmployeeFormValue {
 }
 
 export default function EmployeesPage() {
+  const { confirm } = useDialogs();
   const [employees, setEmployees] = useState<Employee[] | null>(null);
   const [tab, setTab] = useState<Tab>("all");
   const [search, setSearch] = useState("");
@@ -121,7 +123,13 @@ export default function EmployeesPage() {
   }
 
   async function remove(e: Employee) {
-    if (!confirm(`Remove “${e.name}” from employees? This cannot be undone.`)) return;
+    const ok = await confirm({
+      title: `Remove "${e.name}" from employees?`,
+      message: "This cannot be undone.",
+      confirmText: "Remove",
+      danger: true,
+    });
+    if (!ok) return;
     const res = await fetch(`/api/admin/employees/${e.id}`, { method: "DELETE" });
     if (res.ok) {
       closeDrawer();

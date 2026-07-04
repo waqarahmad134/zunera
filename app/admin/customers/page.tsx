@@ -5,10 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Loader2, Plus, Search, Trash2 } from "lucide-react";
 import AdminShell from "@/components/AdminShell";
+import { useDialogs } from "@/components/ConfirmProvider";
 import type { Customer } from "@/lib/customers";
 
 export default function CustomersPage() {
   const router = useRouter();
+  const { confirm, alertDialog } = useDialogs();
   const [customers, setCustomers] = useState<Customer[] | null>(null);
   const [search, setSearch] = useState("");
 
@@ -45,13 +47,19 @@ export default function CustomersPage() {
 
   async function remove(c: Customer, e: React.MouseEvent) {
     e.stopPropagation();
-    if (!confirm(`Delete customer “${c.name}”? This only works if they have no orders.`)) return;
+    const ok = await confirm({
+      title: `Delete customer "${c.name}"?`,
+      message: "This only works if they have no orders.",
+      confirmText: "Delete",
+      danger: true,
+    });
+    if (!ok) return;
     const res = await fetch(`/api/admin/customers/${c.id}`, { method: "DELETE" });
     if (res.ok) {
       load();
     } else {
       const body = await res.json().catch(() => ({}));
-      alert(body.error || "Could not delete customer.");
+      await alertDialog(body.error || "Could not delete customer.");
     }
   }
 

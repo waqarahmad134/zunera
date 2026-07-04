@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { ConfirmProvider } from "@/components/ConfirmProvider";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import "./globals.css";
 
@@ -36,7 +37,7 @@ export default function RootLayout({
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full bg-paper text-ink">
         <ServiceWorkerRegistration />
-        {children}
+        <ConfirmProvider>{children}</ConfirmProvider>
       </body>
     </html>
   );

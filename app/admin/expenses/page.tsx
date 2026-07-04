@@ -6,6 +6,7 @@ import {
   Check, ChevronRight, Loader2, Plus, Save, Search, Trash2, TriangleAlert,
 } from "lucide-react";
 import AdminShell from "@/components/AdminShell";
+import { useDialogs } from "@/components/ConfirmProvider";
 import Drawer from "@/components/Drawer";
 import ExpenseForm, { type ExpenseFormValue } from "@/components/ExpenseForm";
 import {
@@ -20,6 +21,7 @@ function toFormValue(e: Expense): ExpenseFormValue {
 }
 
 export default function ExpensesPage() {
+  const { confirm } = useDialogs();
   const [expenses, setExpenses] = useState<Expense[] | null>(null);
   const [tab, setTab] = useState<Tab>("all");
   const [search, setSearch] = useState("");
@@ -117,7 +119,13 @@ export default function ExpensesPage() {
   }
 
   async function remove(e: Expense) {
-    if (!confirm(`Delete “${e.title}”? This cannot be undone.`)) return;
+    const ok = await confirm({
+      title: `Delete "${e.title}"?`,
+      message: "This cannot be undone.",
+      confirmText: "Delete",
+      danger: true,
+    });
+    if (!ok) return;
     const res = await fetch(`/api/admin/expenses/${e.id}`, { method: "DELETE" });
     if (res.ok) {
       closeDrawer();

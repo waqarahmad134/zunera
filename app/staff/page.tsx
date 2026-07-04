@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Loader2, Lock, Search } from "lucide-react";
 import StaffShell from "@/components/StaffShell";
+import { useDialogs } from "@/components/ConfirmProvider";
 import PaymentBadge from "@/components/PaymentBadge";
 import StatusBadge from "@/components/StatusBadge";
 import {
@@ -13,6 +14,7 @@ import {
 type Tab = "all" | OrderStatus;
 
 export default function StaffPage() {
+  const { alertDialog } = useDialogs();
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [tab, setTab] = useState<Tab>("all");
   const [search, setSearch] = useState("");
@@ -69,7 +71,7 @@ export default function StaffPage() {
     const body = await res.json().catch(() => ({}));
     setUpdatingId(null);
     if (res.ok) await load();
-    else alert(body.error || "Could not update status.");
+    else await alertDialog(body.error || "Could not update status.");
   }
 
   async function setPayment(order: Order, paymentStatus: PaymentStatus) {
@@ -83,7 +85,7 @@ export default function StaffPage() {
     const body = await res.json().catch(() => ({}));
     setUpdatingId(null);
     if (res.ok) await load();
-    else alert(body.error || "Could not update payment.");
+    else await alertDialog(body.error || "Could not update payment.");
   }
 
   const tabs: { id: Tab; label: string }[] = [
