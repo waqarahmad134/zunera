@@ -8,9 +8,12 @@ import BarChart from "@/components/charts/BarChart";
 import { formatCurrency } from "@/lib/orders";
 import type { ReportData } from "@/lib/db";
 
-type Preset = "month" | "30days" | "year" | "all";
+type Preset = "today" | "yesterday" | "week" | "month" | "30days" | "year" | "all";
 
 const PRESETS: { id: Preset; label: string }[] = [
+  { id: "today", label: "Today" },
+  { id: "yesterday", label: "Yesterday" },
+  { id: "week", label: "This Week" },
   { id: "month", label: "This Month" },
   { id: "30days", label: "Last 30 Days" },
   { id: "year", label: "This Year" },
@@ -21,10 +24,31 @@ function toISODate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
+/** Monday-based start of the calendar week containing `d`. */
+function startOfWeek(d: Date): Date {
+  const day = d.getUTCDay(); // 0 (Sun) .. 6 (Sat)
+  const daysSinceMonday = (day + 6) % 7;
+  const start = new Date(d);
+  start.setUTCDate(start.getUTCDate() - daysSinceMonday);
+  return start;
+}
+
 function rangeFor(preset: Preset): { from: string | null; to: string } {
   const today = new Date();
   const to = toISODate(today);
   switch (preset) {
+    case "today":
+      return { from: to, to };
+    case "yesterday": {
+      const yesterday = new Date(today);
+      yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+      const iso = toISODate(yesterday);
+      return { from: iso, to: iso };
+    }
+    case "week": {
+      const from = startOfWeek(today);
+      return { from: toISODate(from), to };
+    }
     case "month": {
       const from = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1));
       return { from: toISODate(from), to };
