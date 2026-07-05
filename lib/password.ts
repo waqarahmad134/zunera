@@ -2,7 +2,15 @@
 // runtime, unlike bcrypt-style libraries that expect Node's crypto.
 import "server-only";
 
-const ITERATIONS = 100_000;
+// Cloudflare Workers bill CPU time per request (as little as 10ms on the
+// Free plan, 50ms default on paid) — not wall-clock time, so a "slow but
+// off-thread" hash doesn't help. 100k PBKDF2-SHA256 iterations measured at
+// ~44ms of pure CPU even on optimized native crypto, and login can run this
+// twice per request (employee check, then customer check), which is enough
+// on its own to trip "Worker exceeded resource limits". The stored hash
+// embeds its own iteration count (see verifyPassword), so lowering this only
+// affects newly-created hashes — existing ones keep verifying correctly.
+const ITERATIONS = 10_000;
 const ALGO = "pbkdf2";
 
 function toBase64(bytes: Uint8Array): string {
