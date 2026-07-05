@@ -48,7 +48,12 @@ function NewOrderForm() {
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (d?.customer) {
-          setForm((f) => ({ ...f, customer: d.customer, address: d.customer.address }));
+          setForm((f) => ({
+            ...f,
+            customer: d.customer,
+            address: d.customer.address,
+            ratePerBottle: d.customer.defaultRatePerBottle ?? f.ratePerBottle,
+          }));
         }
       });
   }, [searchParams]);

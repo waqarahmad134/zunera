@@ -37,6 +37,7 @@ export async function PATCH(
     name?: string;
     phone?: string | null;
     address?: string;
+    defaultRatePerBottle?: number | null;
     passwordHash?: string | null;
   } = {};
 
@@ -59,6 +60,17 @@ export async function PATCH(
       );
     }
     update.phone = v;
+  }
+  if (body.defaultRatePerBottle !== undefined) {
+    if (body.defaultRatePerBottle === "" || body.defaultRatePerBottle === null) {
+      update.defaultRatePerBottle = null;
+    } else {
+      const v = Number(body.defaultRatePerBottle);
+      if (!Number.isFinite(v) || v <= 0) {
+        return NextResponse.json({ error: "Default rate per bottle must be a positive number." }, { status: 400 });
+      }
+      update.defaultRatePerBottle = v;
+    }
   }
   if (body.password) {
     const existing = await getCustomer(id);

@@ -82,7 +82,13 @@ export default function CustomerDetailPage() {
 
   function startEdit() {
     if (!customer) return;
-    setForm({ name: customer.name, phone: customer.phone ?? "", address: customer.address, password: "" });
+    setForm({
+      name: customer.name,
+      phone: customer.phone ?? "",
+      address: customer.address,
+      defaultRatePerBottle: customer.defaultRatePerBottle ?? "",
+      password: "",
+    });
     setEditing(true);
     setMsg(null);
   }
@@ -101,6 +107,7 @@ export default function CustomerDetailPage() {
         name: form.name.trim(),
         phone: form.phone.trim(),
         address: form.address.trim(),
+        defaultRatePerBottle: form.defaultRatePerBottle,
         password: form.password,
       }),
     });

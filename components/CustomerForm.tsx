@@ -8,6 +8,7 @@ export interface CustomerFormValue {
   name: string;
   phone: string;
   address: string;
+  defaultRatePerBottle: number | "";
   password: string;
 }
 
@@ -55,6 +56,26 @@ export default function CustomerForm({
           rows={3}
           className={`${inputClass} resize-y leading-relaxed`}
         />
+      </div>
+      <div>
+        <label className={labelClass}>Default rate per bottle (optional)</label>
+        <input
+          type="number"
+          min={0}
+          step={0.01}
+          value={value.defaultRatePerBottle}
+          onChange={(e) =>
+            onChange({
+              ...value,
+              defaultRatePerBottle: e.target.value === "" ? "" : Number(e.target.value),
+            })
+          }
+          placeholder="2.50"
+          className={inputClass}
+        />
+        <p className="mt-1.5 text-xs text-ink-soft">
+          Prefills the rate on any new order for them — still editable per order.
+        </p>
       </div>
       <div>
         <label className={labelClass}>Portal password</label>

@@ -43,9 +43,18 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  let defaultRatePerBottle: number | null = null;
+  if (body?.defaultRatePerBottle !== undefined && body.defaultRatePerBottle !== "") {
+    const v = Number(body.defaultRatePerBottle);
+    if (!Number.isFinite(v) || v <= 0) {
+      return NextResponse.json({ error: "Default rate per bottle must be a positive number." }, { status: 400 });
+    }
+    defaultRatePerBottle = v;
+  }
+
   try {
     const passwordHash = password ? await hashPassword(password) : null;
-    const customer = await createCustomer({ name, address, phone }, passwordHash);
+    const customer = await createCustomer({ name, address, phone, defaultRatePerBottle }, passwordHash);
     return NextResponse.json({ customer }, { status: 201 });
   } catch (e) {
     return NextResponse.json(

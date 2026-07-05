@@ -26,6 +26,7 @@ function toFormValue(o: Order): OrderFormValue {
       name: o.customerName,
       phone: null,
       address: o.address,
+      defaultRatePerBottle: null,
       createdAt: "",
       updatedAt: "",
     },

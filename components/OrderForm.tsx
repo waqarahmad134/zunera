@@ -129,7 +129,14 @@ export default function OrderForm({
         <label className={labelClass}>Customer</label>
         <CustomerPicker
           value={value.customer}
-          onSelect={(customer) => onChange({ ...value, customer, address: customer.address })}
+          onSelect={(customer) =>
+            onChange({
+              ...value,
+              customer,
+              address: customer.address,
+              ratePerBottle: customer.defaultRatePerBottle ?? "",
+            })
+          }
         />
       </div>
 

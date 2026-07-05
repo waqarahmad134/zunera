@@ -275,6 +275,7 @@ interface CustomerRow {
   name: string;
   phone: string | null;
   address: string;
+  default_rate_per_bottle: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -285,6 +286,7 @@ function toCustomer(r: CustomerRow): Customer {
     name: r.name,
     phone: r.phone,
     address: r.address,
+    defaultRatePerBottle: r.default_rate_per_bottle,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
   };
@@ -317,9 +319,9 @@ export async function createCustomer(
 ): Promise<Customer> {
   const env = await getEnv();
   const row = await env.DB.prepare(
-    `INSERT INTO customers (name, phone, address, password_hash) VALUES (?1, ?2, ?3, ?4) RETURNING *`
+    `INSERT INTO customers (name, phone, address, default_rate_per_bottle, password_hash) VALUES (?1, ?2, ?3, ?4, ?5) RETURNING *`
   )
-    .bind(input.name, input.phone || null, input.address, passwordHash)
+    .bind(input.name, input.phone || null, input.address, input.defaultRatePerBottle ?? null, passwordHash)
     .first<CustomerRow>();
   return toCustomer(row!);
 }
@@ -328,6 +330,7 @@ export interface CustomerUpdateInput {
   name?: string;
   phone?: string | null;
   address?: string;
+  defaultRatePerBottle?: number | null;
   /** undefined = leave unchanged, null = clear, string = set to this hash. */
   passwordHash?: string | null;
 }
@@ -351,13 +354,15 @@ export async function updateCustomer(
   }
 
   const row = await env.DB.prepare(
-    `UPDATE customers SET name = ?1, phone = ?2, address = ?3, password_hash = ?4, updated_at = datetime('now')
-     WHERE id = ?5 RETURNING *`
+    `UPDATE customers SET name = ?1, phone = ?2, address = ?3, default_rate_per_bottle = ?4,
+       password_hash = ?5, updated_at = datetime('now')
+     WHERE id = ?6 RETURNING *`
   )
     .bind(
       input.name ?? existing.name,
       input.phone !== undefined ? input.phone || null : existing.phone,
       input.address ?? existing.address,
+      input.defaultRatePerBottle !== undefined ? input.defaultRatePerBottle : existing.defaultRatePerBottle,
       passwordHash,
       id
     )
