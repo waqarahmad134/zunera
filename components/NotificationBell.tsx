@@ -25,13 +25,29 @@ function urlBase64ToUint8Array(base64Url: string): Uint8Array {
   return bytes;
 }
 
-/** Notification bell + inbox, polling `${apiBase}/notifications` and offering to enable Web Push. */
-export default function NotificationBell({ apiBase }: { apiBase: string }) {
+/**
+ * Notification bell + inbox, polling `${apiBase}/notifications` and offering
+ * to enable Web Push.
+ *
+ * @param promptIfDisabled Show a dismissible popup (once per browser tab
+ * session) nudging the user to enable push when it's off or blocked, instead
+ * of relying on them noticing the small "Enable push" link inside the bell
+ * dropdown.
+ */
+export default function NotificationBell({
+  apiBase,
+  promptIfDisabled = false,
+}: {
+  apiBase: string;
+  promptIfDisabled?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unread, setUnread] = useState(0);
   const [pushState, setPushState] = useState<"unknown" | "unsupported" | "off" | "on" | "denied">("unknown");
+  const [promptDismissed, setPromptDismissed] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
+  const dismissKey = `push-prompt-dismissed:${apiBase}`;
 
   useEffect(() => {
     let cancelled = false;
@@ -51,6 +67,10 @@ export default function NotificationBell({ apiBase }: { apiBase: string }) {
   }, [apiBase]);
 
   useEffect(() => {
+    if (promptIfDisabled) {
+      const dismissed = sessionStorage.getItem(dismissKey) === "1";
+      Promise.resolve().then(() => setPromptDismissed(dismissed));
+    }
     if (typeof window === "undefined" || !("serviceWorker" in navigator) || !("PushManager" in window)) {
       Promise.resolve().then(() => setPushState("unsupported"));
       return;
@@ -61,9 +81,22 @@ export default function NotificationBell({ apiBase }: { apiBase: string }) {
     }
     navigator.serviceWorker.ready
       .then((reg) => reg.pushManager.getSubscription())
-      .then((sub) => setPushState(sub ? "on" : "off"))
+      .then((sub) => {
+        setPushState(sub ? "on" : "off");
+        // The browser can still hold a subscription the server has since
+        // lost track of (a wiped/rotated DB row, a re-assigned recipient,
+        // etc.) — that shows as "on" here while push silently never
+        // arrives. Re-upserting on every load makes it self-healing.
+        if (sub) {
+          fetch(`${apiBase}/push/subscribe`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(sub.toJSON()),
+          }).catch(() => {});
+        }
+      })
       .catch(() => setPushState("unsupported"));
-  }, []);
+  }, [apiBase, promptIfDisabled, dismissKey]);
 
   useEffect(() => {
     if (!open) return;
@@ -106,6 +139,14 @@ export default function NotificationBell({ apiBase }: { apiBase: string }) {
       setPushState("off");
     }
   }
+
+  function dismissPrompt() {
+    setPromptDismissed(true);
+    sessionStorage.setItem(dismissKey, "1");
+  }
+
+  const showPrompt =
+    promptIfDisabled && !promptDismissed && (pushState === "off" || pushState === "denied");
 
   return (
     <div ref={containerRef} className="relative">
@@ -165,6 +206,49 @@ export default function NotificationBell({ apiBase }: { apiBase: string }) {
                 </div>
               ))
             )}
+          </div>
+        </div>
+      )}
+
+      {showPrompt && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 p-4 sm:items-center"
+          onClick={dismissPrompt}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-[0_20px_60px_rgba(11,11,11,0.25)]"
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="grid size-9 shrink-0 place-items-center rounded-full bg-amber-100 text-amber-700">
+                <BellOff size={16} />
+              </span>
+              <p className="text-sm font-semibold">Notifications are off</p>
+            </div>
+            <p className="mt-2.5 text-sm text-ink-soft">
+              {pushState === "denied"
+                ? "Push notifications are blocked for this site, so you won't be alerted about new orders or updates. Allow notifications in your browser's site settings for this page, then reload."
+                : "Turn on push notifications so you don't miss new orders or status updates when the app isn't open in front of you."}
+            </p>
+            <div className="mt-4 flex items-center gap-2.5">
+              {pushState === "off" && (
+                <button
+                  onClick={async () => {
+                    await enablePush();
+                    dismissPrompt();
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-3.5 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-deep"
+                >
+                  Enable notifications
+                </button>
+              )}
+              <button
+                onClick={dismissPrompt}
+                className="rounded-xl border border-line px-3.5 py-2 text-sm text-ink-soft transition-colors hover:border-ink-soft"
+              >
+                Not now
+              </button>
+            </div>
           </div>
         </div>
       )}

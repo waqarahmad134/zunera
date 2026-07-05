@@ -90,7 +90,7 @@ export default function AdminShell({
             </Link>
           </div>
           <div className="flex items-center gap-1">
-            <NotificationBell apiBase="/api/admin" />
+            <NotificationBell apiBase="/api/admin" promptIfDisabled />
             <button
               onClick={logout}
               className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-ink-soft hover:bg-paper-soft transition-colors"

@@ -1,18 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Droplets, LogOut, MapPin, MapPinOff } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
+import { useDialogs } from "@/components/ConfirmProvider";
 
 const LOCATION_PING_INTERVAL_MS = 20_000;
 
 export default function StaffShell({ title, children }: { title: string; children: React.ReactNode }) {
   const router = useRouter();
+  const { alertDialog } = useDialogs();
   const [sharing, setSharing] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  function pingLocation() {
+  const pingLocation = useCallback(() => {
     if (!("geolocation" in navigator)) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -26,10 +28,23 @@ export default function StaffShell({ title, children }: { title: string; childre
           }),
         }).catch(() => {});
       },
-      () => setSharing(false),
+      (err) => {
+        // Only PERMISSION_DENIED means sharing genuinely can't continue.
+        // TIMEOUT and POSITION_UNAVAILABLE are transient (weak GPS signal,
+        // one slow fix, phone briefly backgrounded) and used to silently
+        // turn sharing off entirely on the very next ping — just skip this
+        // one and let the interval retry.
+        if (err.code === err.PERMISSION_DENIED) {
+          setSharing(false);
+          alertDialog(
+            "Location sharing was turned off because location access is blocked for this site. " +
+              "Allow location access in your browser's site settings, then turn sharing back on."
+          );
+        }
+      },
       { enableHighAccuracy: true, maximumAge: 15_000, timeout: 10_000 }
     );
-  }
+  }, [alertDialog]);
 
   function toggleSharing() {
     if (sharing) {
@@ -50,7 +65,7 @@ export default function StaffShell({ title, children }: { title: string; childre
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [sharing]);
+  }, [sharing, pingLocation]);
 
   async function logout() {
     await fetch("/api/logout", { method: "POST" });
@@ -79,7 +94,7 @@ export default function StaffShell({ title, children }: { title: string; childre
               {sharing ? <MapPin size={14} /> : <MapPinOff size={14} />}
               <span className="hidden sm:inline">{sharing ? "Sharing location" : "Share location"}</span>
             </button>
-            <NotificationBell apiBase="/api/staff" />
+            <NotificationBell apiBase="/api/staff" promptIfDisabled />
             <button
               onClick={logout}
               className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-ink-soft hover:bg-paper-soft transition-colors"
