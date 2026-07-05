@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { MapPin, Navigation } from "lucide-react";
+import { MapPin, MapPinned, Navigation } from "lucide-react";
+import AddressMapPicker from "@/components/AddressMapPicker";
 import CustomerPicker from "@/components/CustomerPicker";
 import type { Customer } from "@/lib/customers";
 import type { Employee } from "@/lib/employees";
@@ -43,6 +44,7 @@ export default function OrderForm({
   const [orderLocation, setOrderLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [geocoding, setGeocoding] = useState(false);
   const [geocodeFailed, setGeocodeFailed] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -141,7 +143,16 @@ export default function OrderForm({
       </div>
 
       <div>
-        <label className={labelClass}>Delivery address</label>
+        <div className="flex items-center justify-between">
+          <label className={labelClass}>Delivery address</label>
+          <button
+            type="button"
+            onClick={() => setPickerOpen(true)}
+            className="mb-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:text-accent-deep transition-colors"
+          >
+            <MapPinned size={13} /> Pick on map
+          </button>
+        </div>
         <textarea
           value={value.address}
           onChange={(e) => onChange({ ...value, address: e.target.value })}
@@ -152,6 +163,12 @@ export default function OrderForm({
         <p className="mt-1.5 text-xs text-ink-soft/80">
           Filled in from the customer — edit here for a one-off delivery elsewhere.
         </p>
+        <AddressMapPicker
+          open={pickerOpen}
+          onClose={() => setPickerOpen(false)}
+          onSelect={(address) => onChange({ ...value, address })}
+          initialCenter={orderLocation}
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">

@@ -1,5 +1,9 @@
 "use client";
 
+import { useState } from "react";
+import { MapPinned } from "lucide-react";
+import AddressMapPicker from "@/components/AddressMapPicker";
+
 const inputClass =
   "w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm outline-none focus:border-accent transition-colors";
 const labelClass = "block text-xs font-semibold tracking-wide uppercase text-ink-soft mb-1.5";
@@ -22,6 +26,8 @@ export default function CustomerForm({
   /** True when editing an existing customer — changes the password hint text. */
   editing?: boolean;
 }) {
+  const [pickerOpen, setPickerOpen] = useState(false);
+
   return (
     // grid-cols-1, not bare `grid`: Tailwind's grid-cols-N utilities use
     // minmax(0, 1fr) tracks, avoiding the "auto" implicit-column blowout
@@ -48,13 +54,27 @@ export default function CustomerForm({
         />
       </div>
       <div>
-        <label className={labelClass}>Address</label>
+        <div className="flex items-center justify-between">
+          <label className={labelClass}>Address</label>
+          <button
+            type="button"
+            onClick={() => setPickerOpen(true)}
+            className="mb-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:text-accent-deep transition-colors"
+          >
+            <MapPinned size={13} /> Pick on map
+          </button>
+        </div>
         <textarea
           value={value.address}
           onChange={(e) => onChange({ ...value, address: e.target.value })}
           placeholder="House 12, Street 4, Sector F-7"
           rows={3}
           className={`${inputClass} resize-y leading-relaxed`}
+        />
+        <AddressMapPicker
+          open={pickerOpen}
+          onClose={() => setPickerOpen(false)}
+          onSelect={(address) => onChange({ ...value, address })}
         />
       </div>
       <div>
