@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Loader2, Lock, Search } from "lucide-react";
+import { Loader2, Lock, Navigation, Search } from "lucide-react";
 import StaffShell from "@/components/StaffShell";
 import { useDialogs } from "@/components/ConfirmProvider";
+import OrderLocationMap from "@/components/OrderLocationMap";
 import PaymentBadge from "@/components/PaymentBadge";
 import StatusBadge from "@/components/StatusBadge";
 import {
@@ -19,6 +20,7 @@ export default function StaffPage() {
   const [tab, setTab] = useState<Tab>("all");
   const [search, setSearch] = useState("");
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [mapOrder, setMapOrder] = useState<Order | null>(null);
 
   const load = useCallback(async () => {
     // no-store: runs right after the employee updates a status, so they
@@ -144,6 +146,12 @@ export default function StaffPage() {
                 <div>
                   <p className="font-medium">{o.customerName}</p>
                   <p className="mt-0.5 text-sm text-ink-soft">{o.address}</p>
+                  <button
+                    onClick={() => setMapOrder(o)}
+                    className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:text-accent-deep transition-colors"
+                  >
+                    <Navigation size={12} /> View on map
+                  </button>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <StatusBadge status={o.status} />
@@ -214,6 +222,10 @@ export default function StaffPage() {
           ))
         )}
       </div>
+
+      {mapOrder && (
+        <OrderLocationMap open onClose={() => setMapOrder(null)} address={mapOrder.address} />
+      )}
     </StaffShell>
   );
 }
