@@ -8,6 +8,8 @@ import type { Employee, EmployeeStatus, NewEmployeeInput } from "./employees";
 import type { Notification } from "./notifications";
 import type { EmployeeLocation } from "./locations";
 import type { Role } from "./session";
+import type { Supplier, NewSupplierInput } from "./suppliers";
+import type { Item, NewItemInput } from "./items";
 
 // ---------------------------------------------------------------------------
 // Orders
@@ -1024,4 +1026,213 @@ export async function listEmployeeLocations(): Promise<EmployeeLocation[]> {
     accuracy: r.accuracy,
     updatedAt: r.updated_at,
   }));
+}
+
+// ---------------------------------------------------------------------------
+// Suppliers
+// ---------------------------------------------------------------------------
+
+interface SupplierRow {
+  id: number;
+  name: string;
+  phone: string | null;
+  address: string | null;
+  opening_balance: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+function toSupplier(r: SupplierRow): Supplier {
+  return {
+    id: r.id,
+    name: r.name,
+    phone: r.phone,
+    address: r.address,
+    openingBalance: r.opening_balance,
+    notes: r.notes,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
+export async function listSuppliers(search?: string): Promise<Supplier[]> {
+  const env = await getEnv();
+  if (search) {
+    const like = `%${search}%`;
+    const { results } = await env.DB.prepare(
+      `SELECT * FROM suppliers WHERE name LIKE ?1 OR phone LIKE ?1 OR address LIKE ?1 ORDER BY name ASC`
+    )
+      .bind(like)
+      .all<SupplierRow>();
+    return (results ?? []).map(toSupplier);
+  }
+  const { results } = await env.DB.prepare("SELECT * FROM suppliers ORDER BY name ASC").all<SupplierRow>();
+  return (results ?? []).map(toSupplier);
+}
+
+export async function getSupplier(id: number): Promise<Supplier | null> {
+  const env = await getEnv();
+  const row = await env.DB.prepare("SELECT * FROM suppliers WHERE id = ?1").bind(id).first<SupplierRow>();
+  return row ? toSupplier(row) : null;
+}
+
+export async function createSupplier(input: NewSupplierInput): Promise<Supplier> {
+  const env = await getEnv();
+  const row = await env.DB.prepare(
+    `INSERT INTO suppliers (name, phone, address, opening_balance, notes) VALUES (?1, ?2, ?3, ?4, ?5) RETURNING *`
+  )
+    .bind(
+      input.name,
+      input.phone || null,
+      input.address || null,
+      input.openingBalance ?? 0,
+      input.notes ?? null
+    )
+    .first<SupplierRow>();
+  return toSupplier(row!);
+}
+
+export interface SupplierUpdateInput {
+  name?: string;
+  phone?: string | null;
+  address?: string | null;
+  openingBalance?: number;
+  notes?: string | null;
+}
+
+export async function updateSupplier(
+  id: number,
+  input: SupplierUpdateInput
+): Promise<Supplier | null> {
+  const env = await getEnv();
+  const existing = await getSupplier(id);
+  if (!existing) return null;
+
+  const row = await env.DB.prepare(
+    `UPDATE suppliers SET name = ?1, phone = ?2, address = ?3, opening_balance = ?4, notes = ?5,
+       updated_at = datetime('now')
+     WHERE id = ?6 RETURNING *`
+  )
+    .bind(
+      input.name ?? existing.name,
+      input.phone !== undefined ? input.phone || null : existing.phone,
+      input.address !== undefined ? input.address || null : existing.address,
+      input.openingBalance ?? existing.openingBalance,
+      input.notes !== undefined ? input.notes : existing.notes,
+      id
+    )
+    .first<SupplierRow>();
+  return row ? toSupplier(row) : null;
+}
+
+export async function deleteSupplier(id: number): Promise<void> {
+  const env = await getEnv();
+  await env.DB.prepare("DELETE FROM suppliers WHERE id = ?1").bind(id).run();
+}
+
+// ---------------------------------------------------------------------------
+// Items — the stock catalog purchased from suppliers.
+// ---------------------------------------------------------------------------
+
+interface ItemRow {
+  id: number;
+  name: string;
+  cost: number;
+  margin: number;
+  returnable: number;
+  opening_stock: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+function toItem(r: ItemRow): Item {
+  return {
+    id: r.id,
+    name: r.name,
+    cost: r.cost,
+    margin: r.margin,
+    salePrice: r.cost + r.margin,
+    returnable: !!r.returnable,
+    openingStock: r.opening_stock,
+    notes: r.notes,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
+export async function listItems(search?: string): Promise<Item[]> {
+  const env = await getEnv();
+  if (search) {
+    const { results } = await env.DB.prepare(
+      `SELECT * FROM items WHERE name LIKE ?1 ORDER BY name ASC`
+    )
+      .bind(`%${search}%`)
+      .all<ItemRow>();
+    return (results ?? []).map(toItem);
+  }
+  const { results } = await env.DB.prepare("SELECT * FROM items ORDER BY name ASC").all<ItemRow>();
+  return (results ?? []).map(toItem);
+}
+
+export async function getItem(id: number): Promise<Item | null> {
+  const env = await getEnv();
+  const row = await env.DB.prepare("SELECT * FROM items WHERE id = ?1").bind(id).first<ItemRow>();
+  return row ? toItem(row) : null;
+}
+
+export async function createItem(input: NewItemInput): Promise<Item> {
+  const env = await getEnv();
+  const row = await env.DB.prepare(
+    `INSERT INTO items (name, cost, margin, returnable, opening_stock, notes)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6) RETURNING *`
+  )
+    .bind(
+      input.name,
+      input.cost ?? 0,
+      input.margin ?? 0,
+      input.returnable ? 1 : 0,
+      input.openingStock ?? 0,
+      input.notes ?? null
+    )
+    .first<ItemRow>();
+  return toItem(row!);
+}
+
+export interface ItemUpdateInput {
+  name?: string;
+  cost?: number;
+  margin?: number;
+  returnable?: boolean;
+  openingStock?: number;
+  notes?: string | null;
+}
+
+export async function updateItem(id: number, input: ItemUpdateInput): Promise<Item | null> {
+  const env = await getEnv();
+  const existing = await getItem(id);
+  if (!existing) return null;
+
+  const row = await env.DB.prepare(
+    `UPDATE items SET name = ?1, cost = ?2, margin = ?3, returnable = ?4, opening_stock = ?5,
+       notes = ?6, updated_at = datetime('now')
+     WHERE id = ?7 RETURNING *`
+  )
+    .bind(
+      input.name ?? existing.name,
+      input.cost ?? existing.cost,
+      input.margin ?? existing.margin,
+      (input.returnable ?? existing.returnable) ? 1 : 0,
+      input.openingStock ?? existing.openingStock,
+      input.notes !== undefined ? input.notes : existing.notes,
+      id
+    )
+    .first<ItemRow>();
+  return row ? toItem(row) : null;
+}
+
+export async function deleteItem(id: number): Promise<void> {
+  const env = await getEnv();
+  await env.DB.prepare("DELETE FROM items WHERE id = ?1").bind(id).run();
 }

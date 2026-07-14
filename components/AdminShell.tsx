@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import {
   LayoutDashboard, ListOrdered, LogOut, Menu, X, Droplets, Users, Receipt, BarChart3, IdCard, Map,
+  Truck, Package,
 } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
 
@@ -21,6 +22,8 @@ const NAV = [
   { href: "/admin/orders", label: "Orders", icon: ListOrdered },
   { href: "/admin/customers", label: "Customers", icon: Users },
   { href: "/admin/employees", label: "Employees", icon: IdCard },
+  { href: "/admin/suppliers", label: "Suppliers", icon: Truck },
+  { href: "/admin/items", label: "Items", icon: Package },
   { href: "/admin/expenses", label: "Expenses", icon: Receipt },
   { href: "/admin/reports", label: "Reports", icon: BarChart3 },
   { href: "/admin/map", label: "Live map", icon: Map },
