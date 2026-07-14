@@ -14,6 +14,7 @@ export interface CustomerFormValue {
   houseNo: string;
   address: string;
   defaultRatePerBottle: number | "";
+  openingBalance: number | "";
   notes: string;
   password: string;
 }
@@ -111,6 +112,27 @@ export default function CustomerForm({
         <p className="mt-1.5 text-xs text-ink-soft">
           Prefills the rate on any new order for them — still editable per order.
         </p>
+      </div>
+      <div className="border-t border-line pt-4">
+        <p className="mb-3 text-xs font-semibold tracking-wide uppercase text-ink-soft">
+          Opening values <span className="normal-case font-normal text-ink-soft/70">(optional)</span>
+        </p>
+        <label className={labelClass}>Opening balance (Rs)</label>
+        <input
+          type="number"
+          min={0}
+          step={0.01}
+          value={value.openingBalance}
+          onChange={(e) =>
+            onChange({
+              ...value,
+              openingBalance: e.target.value === "" ? "" : Number(e.target.value),
+            })
+          }
+          placeholder="0"
+          className={inputClass}
+        />
+        <p className="mt-1.5 text-xs text-ink-soft">Amount they already owe you.</p>
       </div>
       <div>
         <label className={labelClass}>Portal password</label>

@@ -54,10 +54,19 @@ export async function POST(req: NextRequest) {
     defaultRatePerBottle = v;
   }
 
+  let openingBalance = 0;
+  if (body?.openingBalance !== undefined && body.openingBalance !== "") {
+    const v = Number(body.openingBalance);
+    if (!Number.isFinite(v) || v < 0) {
+      return NextResponse.json({ error: "Opening balance must be zero or more." }, { status: 400 });
+    }
+    openingBalance = v;
+  }
+
   try {
     const passwordHash = password ? await hashPassword(password) : null;
     const customer = await createCustomer(
-      { name, address, phone, houseNo, defaultRatePerBottle, notes },
+      { name, address, phone, houseNo, defaultRatePerBottle, openingBalance, notes },
       passwordHash
     );
     return NextResponse.json({ customer }, { status: 201 });

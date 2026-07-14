@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft, Calendar, Check, Home, Loader2, MapPin, Pencil, Phone, Plus,
+  ArrowLeft, Banknote, Calendar, Check, Home, Loader2, MapPin, Pencil, Phone, Plus,
   Receipt, Save, ShoppingBag, StickyNote, Trash2, TriangleAlert, User, Wallet, X,
 } from "lucide-react";
 import AdminShell from "@/components/AdminShell";
@@ -12,8 +12,30 @@ import { useDialogs } from "@/components/ConfirmProvider";
 import CustomerForm, { type CustomerFormValue } from "@/components/CustomerForm";
 import PaymentBadge from "@/components/PaymentBadge";
 import StatusBadge from "@/components/StatusBadge";
-import type { Customer, CustomerSummary } from "@/lib/customers";
+import type { Customer, CustomerBalance, CustomerSummary } from "@/lib/customers";
 import { formatCurrency, formatDate, type Order } from "@/lib/orders";
+
+function MoneyRow({
+  label,
+  value,
+  sign,
+  strong = false,
+}: {
+  label: string;
+  value: number;
+  sign?: "+" | "−";
+  strong?: boolean;
+}) {
+  return (
+    <div className={`flex items-center justify-between py-1.5 ${strong ? "" : "text-sm text-ink-soft"}`}>
+      <span className={strong ? "text-sm font-semibold" : ""}>{label}</span>
+      <span className={`tabular-nums ${strong ? "text-base font-semibold" : ""}`}>
+        {sign ? `${sign} ` : ""}
+        {formatCurrency(value)}
+      </span>
+    </div>
+  );
+}
 
 function StatTile({
   icon: Icon,
@@ -42,6 +64,7 @@ export default function CustomerDetailPage() {
 
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [summary, setSummary] = useState<CustomerSummary | null>(null);
+  const [balance, setBalance] = useState<CustomerBalance | null>(null);
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [notFound, setNotFound] = useState(false);
 
@@ -80,6 +103,18 @@ export default function CustomerDetailPage() {
     };
   }, [id]);
 
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/admin/customers/${id}/balance`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!cancelled && d) setBalance(d.balance);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
   function startEdit() {
     if (!customer) return;
     setForm({
@@ -88,6 +123,7 @@ export default function CustomerDetailPage() {
       houseNo: customer.houseNo ?? "",
       address: customer.address,
       defaultRatePerBottle: customer.defaultRatePerBottle ?? "",
+      openingBalance: customer.openingBalance,
       notes: customer.notes ?? "",
       password: "",
     });
@@ -111,6 +147,7 @@ export default function CustomerDetailPage() {
         houseNo: form.houseNo.trim() || null,
         address: form.address.trim(),
         defaultRatePerBottle: form.defaultRatePerBottle,
+        openingBalance: form.openingBalance,
         notes: form.notes.trim() || null,
         password: form.password,
       }),
@@ -123,6 +160,9 @@ export default function CustomerDetailPage() {
     }
     setCustomer(body.customer);
     setEditing(false);
+    fetch(`/api/admin/customers/${id}/balance`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d && setBalance(d.balance));
   }
 
   async function remove() {
@@ -180,6 +220,12 @@ export default function CustomerDetailPage() {
             </div>
             <div className="flex items-center gap-2">
               <Link
+                href={`/admin/payments?customerId=${customer.id}`}
+                className="inline-flex items-center gap-2 rounded-xl border border-line px-4 py-2.5 text-sm font-medium text-ink-soft hover:border-accent hover:text-accent transition-colors"
+              >
+                <Banknote size={15} /> Record payment
+              </Link>
+              <Link
                 href={`/admin/orders/new?customerId=${customer.id}`}
                 className="inline-flex items-center gap-2 rounded-xl bg-accent text-white px-4 py-2.5 text-sm font-medium hover:bg-accent-deep transition-colors"
               >
@@ -197,6 +243,19 @@ export default function CustomerDetailPage() {
                 label="Last order"
                 value={summary.lastOrderAt ? formatDate(summary.lastOrderAt) : "—"}
               />
+            </div>
+          )}
+
+          {balance && (
+            <div className="mt-5 rounded-2xl border border-line bg-white p-5 sm:p-6">
+              <h2 className="text-base font-semibold">Summary</h2>
+              <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-ink-soft">Money</p>
+              <div className="mt-1 divide-y divide-line">
+                <MoneyRow label="Current outstanding" value={balance.currentOutstanding} />
+                <MoneyRow label="Today's sale" value={balance.todaysSale} sign="+" />
+                <MoneyRow label="Cash collected" value={balance.cashCollected} sign="−" />
+                <MoneyRow label="New outstanding" value={balance.newOutstanding} strong />
+              </div>
             </div>
           )}
 

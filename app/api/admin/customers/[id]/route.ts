@@ -39,6 +39,7 @@ export async function PATCH(
     address?: string;
     houseNo?: string | null;
     defaultRatePerBottle?: number | null;
+    openingBalance?: number;
     notes?: string | null;
     passwordHash?: string | null;
   } = {};
@@ -79,6 +80,13 @@ export async function PATCH(
       }
       update.defaultRatePerBottle = v;
     }
+  }
+  if (body.openingBalance !== undefined) {
+    const v = Number(body.openingBalance);
+    if (!Number.isFinite(v) || v < 0) {
+      return NextResponse.json({ error: "Opening balance must be zero or more." }, { status: 400 });
+    }
+    update.openingBalance = v;
   }
   if (body.password) {
     const existing = await getCustomer(id);

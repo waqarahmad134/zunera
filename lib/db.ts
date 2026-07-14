@@ -11,6 +11,8 @@ import type { Role } from "./session";
 import type { Supplier, NewSupplierInput } from "./suppliers";
 import type { Item, NewItemInput } from "./items";
 import type { NewPurchaseInput, Purchase, PurchaseLine } from "./purchases";
+import type { CustomerBalance } from "./customers";
+import type { NewPaymentInInput, PaymentIn, PaymentMethod } from "./payments";
 
 // ---------------------------------------------------------------------------
 // Orders
@@ -286,6 +288,7 @@ interface CustomerRow {
   address: string;
   house_no: string | null;
   default_rate_per_bottle: number | null;
+  opening_balance: number;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -299,6 +302,7 @@ function toCustomer(r: CustomerRow): Customer {
     address: r.address,
     houseNo: r.house_no,
     defaultRatePerBottle: r.default_rate_per_bottle,
+    openingBalance: r.opening_balance,
     notes: r.notes,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
@@ -332,7 +336,7 @@ export async function createCustomer(
 ): Promise<Customer> {
   const env = await getEnv();
   const row = await env.DB.prepare(
-    `INSERT INTO customers (name, phone, address, house_no, default_rate_per_bottle, notes, password_hash) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7) RETURNING *`
+    `INSERT INTO customers (name, phone, address, house_no, default_rate_per_bottle, opening_balance, notes, password_hash) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8) RETURNING *`
   )
     .bind(
       input.name,
@@ -340,6 +344,7 @@ export async function createCustomer(
       input.address,
       input.houseNo ?? null,
       input.defaultRatePerBottle ?? null,
+      input.openingBalance ?? 0,
       input.notes ?? null,
       passwordHash
     )
@@ -353,6 +358,7 @@ export interface CustomerUpdateInput {
   address?: string;
   houseNo?: string | null;
   defaultRatePerBottle?: number | null;
+  openingBalance?: number;
   notes?: string | null;
   /** undefined = leave unchanged, null = clear, string = set to this hash. */
   passwordHash?: string | null;
@@ -378,8 +384,9 @@ export async function updateCustomer(
 
   const row = await env.DB.prepare(
     `UPDATE customers SET name = ?1, phone = ?2, address = ?3, house_no = ?4,
-       default_rate_per_bottle = ?5, notes = ?6, password_hash = ?7, updated_at = datetime('now')
-     WHERE id = ?8 RETURNING *`
+       default_rate_per_bottle = ?5, opening_balance = ?6, notes = ?7, password_hash = ?8,
+       updated_at = datetime('now')
+     WHERE id = ?9 RETURNING *`
   )
     .bind(
       input.name ?? existing.name,
@@ -387,6 +394,7 @@ export async function updateCustomer(
       input.address ?? existing.address,
       input.houseNo !== undefined ? input.houseNo : existing.houseNo,
       input.defaultRatePerBottle !== undefined ? input.defaultRatePerBottle : existing.defaultRatePerBottle,
+      input.openingBalance ?? existing.openingBalance,
       input.notes !== undefined ? input.notes : existing.notes,
       passwordHash,
       id
@@ -1387,4 +1395,140 @@ export async function suggestReceiptNo(): Promise<string> {
     .first<{ count: number }>();
   const next = (row?.count ?? 0) + 1;
   return `${prefix}${String(next).padStart(3, "0")}`;
+}
+
+// ---------------------------------------------------------------------------
+// Payments In — customer payments not tied to a specific order.
+// ---------------------------------------------------------------------------
+
+interface PaymentInRow {
+  id: number;
+  customer_id: number;
+  customer_name: string;
+  amount: number;
+  payment_date: string;
+  method: PaymentMethod;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+function toPaymentIn(r: PaymentInRow): PaymentIn {
+  return {
+    id: r.id,
+    customerId: r.customer_id,
+    customerName: r.customer_name,
+    amount: r.amount,
+    paymentDate: r.payment_date,
+    method: r.method,
+    note: r.note,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
+const PAYMENT_IN_SELECT = `
+  SELECT p.id, p.customer_id, c.name AS customer_name, p.amount, p.payment_date, p.method, p.note,
+         p.created_at, p.updated_at
+  FROM payments_in p
+  JOIN customers c ON c.id = p.customer_id
+`;
+
+export interface PaymentInFilters {
+  customerId?: number;
+  from?: string;
+  to?: string;
+}
+
+export async function listPaymentsIn(filters: PaymentInFilters = {}): Promise<PaymentIn[]> {
+  const env = await getEnv();
+  const clauses: string[] = [];
+  const binds: unknown[] = [];
+
+  if (filters.customerId) {
+    clauses.push("p.customer_id = ?");
+    binds.push(filters.customerId);
+  }
+  if (filters.from) {
+    clauses.push("p.payment_date >= ?");
+    binds.push(filters.from);
+  }
+  if (filters.to) {
+    clauses.push("p.payment_date <= ?");
+    binds.push(filters.to);
+  }
+
+  const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
+  const { results } = await env.DB.prepare(
+    `${PAYMENT_IN_SELECT} ${where} ORDER BY p.payment_date DESC, p.id DESC`
+  )
+    .bind(...binds)
+    .all<PaymentInRow>();
+  return (results ?? []).map(toPaymentIn);
+}
+
+export async function createPaymentIn(input: NewPaymentInInput): Promise<PaymentIn> {
+  const env = await getEnv();
+  const inserted = await env.DB.prepare(
+    `INSERT INTO payments_in (customer_id, amount, payment_date, method, note)
+     VALUES (?1, ?2, ?3, ?4, ?5) RETURNING id`
+  )
+    .bind(input.customerId, input.amount, input.paymentDate, input.method, input.note ?? null)
+    .first<{ id: number }>();
+  const row = await env.DB.prepare(`${PAYMENT_IN_SELECT} WHERE p.id = ?1`)
+    .bind(inserted!.id)
+    .first<PaymentInRow>();
+  return toPaymentIn(row!);
+}
+
+export async function deletePaymentIn(id: number): Promise<void> {
+  const env = await getEnv();
+  await env.DB.prepare("DELETE FROM payments_in WHERE id = ?1").bind(id).run();
+}
+
+/**
+ * The "Money" balance summary for a customer's detail page. Splits activity
+ * into "before today" (currentOutstanding) and "today" (todaysSale,
+ * cashCollected), since an order's payment_status has no separate
+ * settlement timestamp — an order paid the same day it's created is treated
+ * as collected today; paid on a later day, its total already left
+ * currentOutstanding as of that day.
+ */
+export async function getCustomerBalance(customerId: number): Promise<CustomerBalance> {
+  const env = await getEnv();
+
+  const orderRow = await env.DB.prepare(
+    `SELECT
+       COALESCE(SUM(CASE WHEN date(created_at) < date('now') THEN total_price ELSE 0 END), 0) AS prior_sales,
+       COALESCE(SUM(CASE WHEN date(created_at) < date('now') AND payment_status != 'unpaid' THEN total_price ELSE 0 END), 0) AS prior_paid,
+       COALESCE(SUM(CASE WHEN date(created_at) = date('now') THEN total_price ELSE 0 END), 0) AS todays_sale,
+       COALESCE(SUM(CASE WHEN date(created_at) = date('now') AND payment_status != 'unpaid' THEN total_price ELSE 0 END), 0) AS todays_paid_via_order
+     FROM orders WHERE customer_id = ?1 AND status != 'cancelled'`
+  )
+    .bind(customerId)
+    .first<{ prior_sales: number; prior_paid: number; todays_sale: number; todays_paid_via_order: number }>();
+
+  const paymentRow = await env.DB.prepare(
+    `SELECT
+       COALESCE(SUM(CASE WHEN payment_date < date('now') THEN amount ELSE 0 END), 0) AS prior_payments,
+       COALESCE(SUM(CASE WHEN payment_date = date('now') THEN amount ELSE 0 END), 0) AS todays_payments
+     FROM payments_in WHERE customer_id = ?1`
+  )
+    .bind(customerId)
+    .first<{ prior_payments: number; todays_payments: number }>();
+
+  const customer = await getCustomer(customerId);
+  const openingBalance = customer?.openingBalance ?? 0;
+
+  const currentOutstanding =
+    openingBalance + (orderRow?.prior_sales ?? 0) - (orderRow?.prior_paid ?? 0) - (paymentRow?.prior_payments ?? 0);
+  const todaysSale = orderRow?.todays_sale ?? 0;
+  const cashCollected = (orderRow?.todays_paid_via_order ?? 0) + (paymentRow?.todays_payments ?? 0);
+
+  return {
+    currentOutstanding,
+    todaysSale,
+    cashCollected,
+    newOutstanding: currentOutstanding + todaysSale - cashCollected,
+  };
 }

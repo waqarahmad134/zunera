@@ -28,6 +28,7 @@ function toFormValue(o: Order): OrderFormValue {
       address: o.address,
       houseNo: null,
       defaultRatePerBottle: null,
+      openingBalance: 0,
       notes: null,
       createdAt: "",
       updatedAt: "",

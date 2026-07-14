@@ -13,6 +13,7 @@ const EMPTY: CustomerFormValue = {
   houseNo: "",
   address: "",
   defaultRatePerBottle: "",
+  openingBalance: "",
   notes: "",
   password: "",
 };
@@ -40,6 +41,7 @@ export default function NewCustomerPage() {
           houseNo: form.houseNo.trim() || null,
           address: form.address.trim(),
           defaultRatePerBottle: form.defaultRatePerBottle,
+          openingBalance: form.openingBalance,
           notes: form.notes.trim() || null,
           password: form.password,
         }),
