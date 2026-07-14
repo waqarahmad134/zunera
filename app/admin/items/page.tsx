@@ -181,7 +181,7 @@ export default function ItemsPage() {
                     Returnable
                   </th>
                   <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-ink-soft whitespace-nowrap">
-                    Stock
+                    Current stock
                   </th>
                   <th className="px-4 py-2.5" />
                 </tr>
@@ -198,7 +198,7 @@ export default function ItemsPage() {
                     <td className="px-4 py-3 tabular-nums">{formatCurrency(i.margin)}</td>
                     <td className="px-4 py-3 tabular-nums font-medium">{formatCurrency(i.salePrice)}</td>
                     <td className="px-4 py-3 text-ink-soft">{i.returnable ? "Yes" : "No"}</td>
-                    <td className="px-4 py-3 tabular-nums">{i.openingStock}</td>
+                    <td className="px-4 py-3 tabular-nums">{i.currentStock}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-0.5">
                         <button

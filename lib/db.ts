@@ -10,6 +10,7 @@ import type { EmployeeLocation } from "./locations";
 import type { Role } from "./session";
 import type { Supplier, NewSupplierInput } from "./suppliers";
 import type { Item, NewItemInput } from "./items";
+import type { NewPurchaseInput, Purchase, PurchaseLine } from "./purchases";
 
 // ---------------------------------------------------------------------------
 // Orders
@@ -1145,7 +1146,17 @@ interface ItemRow {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  /** Only present on rows from ITEM_SELECT (joined), not plain RETURNING *. */
+  purchased_qty?: number;
 }
+
+// LEFT JOINs a correlated sum of everything received via Purchases, so
+// current stock never drifts out of sync with a separately-maintained
+// counter — it's always opening_stock + purchase history, computed fresh.
+const ITEM_SELECT = `
+  SELECT i.*, COALESCE((SELECT SUM(pi.qty) FROM purchase_items pi WHERE pi.item_id = i.id), 0) AS purchased_qty
+  FROM items i
+`;
 
 function toItem(r: ItemRow): Item {
   return {
@@ -1156,6 +1167,7 @@ function toItem(r: ItemRow): Item {
     salePrice: r.cost + r.margin,
     returnable: !!r.returnable,
     openingStock: r.opening_stock,
+    currentStock: r.opening_stock + (r.purchased_qty ?? 0),
     notes: r.notes,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
@@ -1166,27 +1178,27 @@ export async function listItems(search?: string): Promise<Item[]> {
   const env = await getEnv();
   if (search) {
     const { results } = await env.DB.prepare(
-      `SELECT * FROM items WHERE name LIKE ?1 ORDER BY name ASC`
+      `${ITEM_SELECT} WHERE i.name LIKE ?1 ORDER BY i.name ASC`
     )
       .bind(`%${search}%`)
       .all<ItemRow>();
     return (results ?? []).map(toItem);
   }
-  const { results } = await env.DB.prepare("SELECT * FROM items ORDER BY name ASC").all<ItemRow>();
+  const { results } = await env.DB.prepare(`${ITEM_SELECT} ORDER BY i.name ASC`).all<ItemRow>();
   return (results ?? []).map(toItem);
 }
 
 export async function getItem(id: number): Promise<Item | null> {
   const env = await getEnv();
-  const row = await env.DB.prepare("SELECT * FROM items WHERE id = ?1").bind(id).first<ItemRow>();
+  const row = await env.DB.prepare(`${ITEM_SELECT} WHERE i.id = ?1`).bind(id).first<ItemRow>();
   return row ? toItem(row) : null;
 }
 
 export async function createItem(input: NewItemInput): Promise<Item> {
   const env = await getEnv();
-  const row = await env.DB.prepare(
+  const inserted = await env.DB.prepare(
     `INSERT INTO items (name, cost, margin, returnable, opening_stock, notes)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6) RETURNING *`
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6) RETURNING id`
   )
     .bind(
       input.name,
@@ -1196,8 +1208,8 @@ export async function createItem(input: NewItemInput): Promise<Item> {
       input.openingStock ?? 0,
       input.notes ?? null
     )
-    .first<ItemRow>();
-  return toItem(row!);
+    .first<{ id: number }>();
+  return (await getItem(inserted!.id))!;
 }
 
 export interface ItemUpdateInput {
@@ -1214,10 +1226,10 @@ export async function updateItem(id: number, input: ItemUpdateInput): Promise<It
   const existing = await getItem(id);
   if (!existing) return null;
 
-  const row = await env.DB.prepare(
+  await env.DB.prepare(
     `UPDATE items SET name = ?1, cost = ?2, margin = ?3, returnable = ?4, opening_stock = ?5,
        notes = ?6, updated_at = datetime('now')
-     WHERE id = ?7 RETURNING *`
+     WHERE id = ?7`
   )
     .bind(
       input.name ?? existing.name,
@@ -1228,11 +1240,151 @@ export async function updateItem(id: number, input: ItemUpdateInput): Promise<It
       input.notes !== undefined ? input.notes : existing.notes,
       id
     )
-    .first<ItemRow>();
-  return row ? toItem(row) : null;
+    .run();
+  return getItem(id);
 }
 
 export async function deleteItem(id: number): Promise<void> {
   const env = await getEnv();
   await env.DB.prepare("DELETE FROM items WHERE id = ?1").bind(id).run();
+}
+
+// ---------------------------------------------------------------------------
+// Purchases — stock received from a supplier, with line items.
+// ---------------------------------------------------------------------------
+
+interface PurchaseRow {
+  id: number;
+  supplier_id: number;
+  supplier_name: string;
+  receipt_no: string | null;
+  received_date: string;
+  notes: string | null;
+  total_cost: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface PurchaseLineRow {
+  id: number;
+  purchase_id: number;
+  item_id: number;
+  item_name: string;
+  qty: number;
+  unit_cost: number;
+  line_total: number;
+}
+
+function toPurchaseLine(r: PurchaseLineRow): PurchaseLine {
+  return {
+    id: r.id,
+    itemId: r.item_id,
+    itemName: r.item_name,
+    qty: r.qty,
+    unitCost: r.unit_cost,
+    lineTotal: r.line_total,
+  };
+}
+
+const PURCHASE_SELECT = `
+  SELECT p.id, p.supplier_id, s.name AS supplier_name, p.receipt_no, p.received_date,
+         p.notes, p.total_cost, p.created_at, p.updated_at
+  FROM purchases p
+  JOIN suppliers s ON s.id = p.supplier_id
+`;
+
+async function attachPurchaseLines(env: Awaited<ReturnType<typeof getEnv>>, rows: PurchaseRow[]): Promise<Purchase[]> {
+  if (rows.length === 0) return [];
+  const ids = rows.map((r) => r.id);
+  const placeholders = ids.map((_, i) => `?${i + 1}`).join(", ");
+  const { results } = await env.DB.prepare(
+    `SELECT pi.id, pi.purchase_id, pi.item_id, i.name AS item_name, pi.qty, pi.unit_cost, pi.line_total
+     FROM purchase_items pi
+     JOIN items i ON i.id = pi.item_id
+     WHERE pi.purchase_id IN (${placeholders})
+     ORDER BY pi.id ASC`
+  )
+    .bind(...ids)
+    .all<PurchaseLineRow>();
+
+  const linesByPurchase = new Map<number, PurchaseLine[]>();
+  for (const line of results ?? []) {
+    const list = linesByPurchase.get(line.purchase_id) ?? [];
+    list.push(toPurchaseLine(line));
+    linesByPurchase.set(line.purchase_id, list);
+  }
+
+  return rows.map((r) => ({
+    id: r.id,
+    supplierId: r.supplier_id,
+    supplierName: r.supplier_name,
+    receiptNo: r.receipt_no,
+    receivedDate: r.received_date,
+    notes: r.notes,
+    totalCost: r.total_cost,
+    lines: linesByPurchase.get(r.id) ?? [],
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  }));
+}
+
+export async function listPurchases(): Promise<Purchase[]> {
+  const env = await getEnv();
+  const { results } = await env.DB.prepare(
+    `${PURCHASE_SELECT} ORDER BY p.received_date DESC, p.id DESC`
+  ).all<PurchaseRow>();
+  return attachPurchaseLines(env, results ?? []);
+}
+
+export async function getPurchase(id: number): Promise<Purchase | null> {
+  const env = await getEnv();
+  const row = await env.DB.prepare(`${PURCHASE_SELECT} WHERE p.id = ?1`).bind(id).first<PurchaseRow>();
+  if (!row) return null;
+  const [purchase] = await attachPurchaseLines(env, [row]);
+  return purchase;
+}
+
+export async function createPurchase(input: NewPurchaseInput): Promise<Purchase> {
+  const env = await getEnv();
+  const totalCost = input.lines.reduce((sum, l) => sum + l.qty * l.unitCost, 0);
+
+  const inserted = await env.DB.prepare(
+    `INSERT INTO purchases (supplier_id, receipt_no, received_date, notes, total_cost)
+     VALUES (?1, ?2, ?3, ?4, ?5) RETURNING id`
+  )
+    .bind(input.supplierId, input.receiptNo || null, input.receivedDate, input.notes ?? null, totalCost)
+    .first<{ id: number }>();
+  const purchaseId = inserted!.id;
+
+  for (const line of input.lines) {
+    await env.DB.prepare(
+      `INSERT INTO purchase_items (purchase_id, item_id, qty, unit_cost, line_total)
+       VALUES (?1, ?2, ?3, ?4, ?5)`
+    )
+      .bind(purchaseId, line.itemId, line.qty, line.unitCost, line.qty * line.unitCost)
+      .run();
+  }
+
+  return (await getPurchase(purchaseId))!;
+}
+
+export async function deletePurchase(id: number): Promise<void> {
+  const env = await getEnv();
+  await env.DB.prepare("DELETE FROM purchase_items WHERE purchase_id = ?1").bind(id).run();
+  await env.DB.prepare("DELETE FROM purchases WHERE id = ?1").bind(id).run();
+}
+
+/** Suggests the next GRN-YYYYMMDD-NNN, based on today's date and how many purchases already exist for today. */
+export async function suggestReceiptNo(): Promise<string> {
+  const env = await getEnv();
+  const today = await env.DB.prepare("SELECT strftime('%Y%m%d', 'now') AS d").first<{ d: string }>();
+  const datePart = today!.d;
+  const prefix = `GRN-${datePart}-`;
+  const row = await env.DB.prepare(
+    "SELECT COUNT(*) AS count FROM purchases WHERE receipt_no LIKE ?1"
+  )
+    .bind(`${prefix}%`)
+    .first<{ count: number }>();
+  const next = (row?.count ?? 0) + 1;
+  return `${prefix}${String(next).padStart(3, "0")}`;
 }
