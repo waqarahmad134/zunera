@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft, Calendar, Check, Loader2, MapPin, Pencil, Phone, Plus,
-  Receipt, Save, ShoppingBag, Trash2, TriangleAlert, User, Wallet, X,
+  ArrowLeft, Calendar, Check, Home, Loader2, MapPin, Pencil, Phone, Plus,
+  Receipt, Save, ShoppingBag, StickyNote, Trash2, TriangleAlert, User, Wallet, X,
 } from "lucide-react";
 import AdminShell from "@/components/AdminShell";
 import { useDialogs } from "@/components/ConfirmProvider";
@@ -85,8 +85,10 @@ export default function CustomerDetailPage() {
     setForm({
       name: customer.name,
       phone: customer.phone ?? "",
+      houseNo: customer.houseNo ?? "",
       address: customer.address,
       defaultRatePerBottle: customer.defaultRatePerBottle ?? "",
+      notes: customer.notes ?? "",
       password: "",
     });
     setEditing(true);
@@ -106,8 +108,10 @@ export default function CustomerDetailPage() {
       body: JSON.stringify({
         name: form.name.trim(),
         phone: form.phone.trim(),
+        houseNo: form.houseNo.trim() || null,
         address: form.address.trim(),
         defaultRatePerBottle: form.defaultRatePerBottle,
+        notes: form.notes.trim() || null,
         password: form.password,
       }),
     });
@@ -251,10 +255,20 @@ export default function CustomerDetailPage() {
                   <Phone size={15} className="mt-0.5 text-ink-soft/60 shrink-0" />
                   <span>{customer.phone || <span className="text-ink-soft">Not provided</span>}</span>
                 </div>
+                <div className="flex items-start gap-2.5 text-sm">
+                  <Home size={15} className="mt-0.5 text-ink-soft/60 shrink-0" />
+                  <span>{customer.houseNo || <span className="text-ink-soft">Not provided</span>}</span>
+                </div>
                 <div className="flex items-start gap-2.5 text-sm sm:col-span-2">
                   <MapPin size={15} className="mt-0.5 text-ink-soft/60 shrink-0" />
                   <span>{customer.address}</span>
                 </div>
+                {customer.notes && (
+                  <div className="flex items-start gap-2.5 text-sm sm:col-span-2">
+                    <StickyNote size={15} className="mt-0.5 text-ink-soft/60 shrink-0" />
+                    <span className="whitespace-pre-wrap text-ink-soft">{customer.notes}</span>
+                  </div>
+                )}
               </div>
             )}
           </div>

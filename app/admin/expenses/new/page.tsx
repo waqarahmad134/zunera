@@ -11,7 +11,7 @@ function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-const EMPTY: ExpenseFormValue = { title: "", category: "fuel", amount: "", expenseDate: today() };
+const EMPTY: ExpenseFormValue = { title: "", category: "fuel", amount: "", expenseDate: today(), notes: "" };
 
 export default function NewExpensePage() {
   const router = useRouter();
@@ -44,6 +44,7 @@ export default function NewExpensePage() {
           category: form.category,
           amount: form.amount,
           expenseDate: form.expenseDate,
+          notes: form.notes.trim() || null,
         }),
       });
       const body = await res.json().catch(() => ({}));

@@ -26,7 +26,9 @@ function toFormValue(o: Order): OrderFormValue {
       name: o.customerName,
       phone: null,
       address: o.address,
+      houseNo: null,
       defaultRatePerBottle: null,
+      notes: null,
       createdAt: "",
       updatedAt: "",
     },
@@ -36,6 +38,7 @@ function toFormValue(o: Order): OrderFormValue {
     status: o.status,
     paymentStatus: o.paymentStatus,
     assignedEmployeeId: o.assignedEmployeeId,
+    notes: o.notes ?? "",
   };
 }
 
@@ -119,6 +122,7 @@ export default function OrdersPage() {
           status: form.status,
           paymentStatus: form.paymentStatus,
           assignedEmployeeId: form.assignedEmployeeId,
+          notes: form.notes.trim() || null,
         }),
       });
       const body = await res.json().catch(() => ({}));

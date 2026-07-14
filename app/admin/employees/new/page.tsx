@@ -19,6 +19,7 @@ const EMPTY: EmployeeFormValue = {
   joinedDate: today(),
   status: "active",
   password: "",
+  notes: "",
 };
 
 export default function NewEmployeePage() {
@@ -59,6 +60,7 @@ export default function NewEmployeePage() {
           joinedDate: form.joinedDate,
           status: form.status,
           password: form.password,
+          notes: form.notes.trim() || null,
         }),
       });
       const body = await res.json().catch(() => ({}));

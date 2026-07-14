@@ -17,7 +17,13 @@ import { formatCurrency, formatDate } from "@/lib/orders";
 type Tab = "all" | ExpenseCategory;
 
 function toFormValue(e: Expense): ExpenseFormValue {
-  return { title: e.title, category: e.category, amount: e.amount, expenseDate: e.expenseDate };
+  return {
+    title: e.title,
+    category: e.category,
+    amount: e.amount,
+    expenseDate: e.expenseDate,
+    notes: e.notes ?? "",
+  };
 }
 
 export default function ExpensesPage() {
@@ -102,6 +108,7 @@ export default function ExpensesPage() {
           category: form.category,
           amount: form.amount,
           expenseDate: form.expenseDate,
+          notes: form.notes.trim() || null,
         }),
       });
       const body = await res.json().catch(() => ({}));

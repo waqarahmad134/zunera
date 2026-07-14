@@ -27,6 +27,8 @@ export interface Order {
    */
   statusLockedByEmployee: boolean;
   paymentLockedByEmployee: boolean;
+  /** Free-text, admin-only. */
+  notes: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -40,6 +42,7 @@ export interface NewOrderInput {
   status: OrderStatus;
   paymentStatus?: PaymentStatus;
   assignedEmployeeId?: number | null;
+  notes?: string | null;
 }
 
 export const STATUSES: OrderStatus[] = ["pending", "delivered", "cancelled"];

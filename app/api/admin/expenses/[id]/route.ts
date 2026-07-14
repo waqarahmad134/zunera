@@ -24,6 +24,7 @@ export async function PATCH(
     category?: ExpenseCategory;
     amount?: number;
     expenseDate?: string;
+    notes?: string | null;
   } = {};
 
   if (body.title !== undefined) {
@@ -50,6 +51,9 @@ export async function PATCH(
       return NextResponse.json({ error: "A valid date is required." }, { status: 400 });
     }
     update.expenseDate = v;
+  }
+  if (body.notes !== undefined) {
+    update.notes = body.notes ? String(body.notes).trim() || null : null;
   }
 
   try {

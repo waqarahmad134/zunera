@@ -11,8 +11,10 @@ const labelClass = "block text-xs font-semibold tracking-wide uppercase text-ink
 export interface CustomerFormValue {
   name: string;
   phone: string;
+  houseNo: string;
   address: string;
   defaultRatePerBottle: number | "";
+  notes: string;
   password: string;
 }
 
@@ -52,6 +54,19 @@ export default function CustomerForm({
           placeholder="+92 300 1234567"
           className={inputClass}
         />
+      </div>
+      <div>
+        <label className={labelClass}>House / unit no. (optional)</label>
+        <input
+          type="text"
+          value={value.houseNo}
+          onChange={(e) => onChange({ ...value, houseNo: e.target.value })}
+          placeholder="12-B"
+          className={inputClass}
+        />
+        <p className="mt-1.5 text-xs text-ink-soft">
+          A separate house, flat or unit number — can be any value, kept apart from the full address below.
+        </p>
       </div>
       <div>
         <div className="flex items-center justify-between">
@@ -109,6 +124,16 @@ export default function CustomerForm({
         <p className="mt-1.5 text-xs text-ink-soft">
           Lets this customer log in with their phone number to see their own orders. Requires a phone number.
         </p>
+      </div>
+      <div>
+        <label className={labelClass}>Notes (optional)</label>
+        <textarea
+          value={value.notes}
+          onChange={(e) => onChange({ ...value, notes: e.target.value })}
+          placeholder="Anything worth remembering about this customer..."
+          rows={3}
+          className={`${inputClass} resize-y leading-relaxed`}
+        />
       </div>
     </div>
   );

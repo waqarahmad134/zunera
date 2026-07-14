@@ -27,6 +27,7 @@ interface OrderRow {
   assigned_employee_name: string | null;
   status_locked_by_employee: number;
   payment_locked_by_employee: number;
+  notes: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -46,6 +47,7 @@ function toOrder(r: OrderRow): Order {
     assignedEmployeeName: r.assigned_employee_name,
     statusLockedByEmployee: !!r.status_locked_by_employee,
     paymentLockedByEmployee: !!r.payment_locked_by_employee,
+    notes: r.notes,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
   };
@@ -55,7 +57,7 @@ const ORDER_SELECT = `
   SELECT o.id, o.customer_id, c.name AS customer_name, o.address, o.bottles,
          o.rate_per_bottle, o.total_price, o.status, o.payment_status,
          o.assigned_employee_id, e.name AS assigned_employee_name,
-         o.status_locked_by_employee, o.payment_locked_by_employee,
+         o.status_locked_by_employee, o.payment_locked_by_employee, o.notes,
          o.created_at, o.updated_at
   FROM orders o
   JOIN customers c ON c.id = o.customer_id
@@ -113,8 +115,8 @@ export async function createOrder(input: NewOrderInput): Promise<Order> {
   const env = await getEnv();
   const total = input.bottles * input.ratePerBottle;
   const inserted = await env.DB.prepare(
-    `INSERT INTO orders (customer_id, address, bottles, rate_per_bottle, total_price, status, payment_status, assigned_employee_id)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+    `INSERT INTO orders (customer_id, address, bottles, rate_per_bottle, total_price, status, payment_status, assigned_employee_id, notes)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
      RETURNING id`
   )
     .bind(
@@ -125,7 +127,8 @@ export async function createOrder(input: NewOrderInput): Promise<Order> {
       total,
       input.status,
       input.paymentStatus ?? "unpaid",
-      input.assignedEmployeeId ?? null
+      input.assignedEmployeeId ?? null,
+      input.notes ?? null
     )
     .first<{ id: number }>();
   return (await getOrder(inserted!.id))!;
@@ -143,6 +146,7 @@ export interface OrderUpdateInput {
   /** Set true when an employee (not admin) is the one making this status/payment change. */
   statusLockedByEmployee?: boolean;
   paymentLockedByEmployee?: boolean;
+  notes?: string | null;
 }
 
 export async function updateOrder(
@@ -169,8 +173,9 @@ export async function updateOrder(
        assigned_employee_id = ?8,
        status_locked_by_employee = ?9,
        payment_locked_by_employee = ?10,
+       notes = ?11,
        updated_at = datetime('now')
-     WHERE id = ?11`
+     WHERE id = ?12`
   )
     .bind(
       input.customerId ?? existing.customerId,
@@ -183,6 +188,7 @@ export async function updateOrder(
       input.assignedEmployeeId !== undefined ? input.assignedEmployeeId : existing.assignedEmployeeId,
       (input.statusLockedByEmployee ?? existing.statusLockedByEmployee) ? 1 : 0,
       (input.paymentLockedByEmployee ?? existing.paymentLockedByEmployee) ? 1 : 0,
+      input.notes !== undefined ? input.notes : existing.notes,
       id
     )
     .run();
@@ -275,7 +281,9 @@ interface CustomerRow {
   name: string;
   phone: string | null;
   address: string;
+  house_no: string | null;
   default_rate_per_bottle: number | null;
+  notes: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -286,7 +294,9 @@ function toCustomer(r: CustomerRow): Customer {
     name: r.name,
     phone: r.phone,
     address: r.address,
+    houseNo: r.house_no,
     defaultRatePerBottle: r.default_rate_per_bottle,
+    notes: r.notes,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
   };
@@ -319,9 +329,17 @@ export async function createCustomer(
 ): Promise<Customer> {
   const env = await getEnv();
   const row = await env.DB.prepare(
-    `INSERT INTO customers (name, phone, address, default_rate_per_bottle, password_hash) VALUES (?1, ?2, ?3, ?4, ?5) RETURNING *`
+    `INSERT INTO customers (name, phone, address, house_no, default_rate_per_bottle, notes, password_hash) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7) RETURNING *`
   )
-    .bind(input.name, input.phone || null, input.address, input.defaultRatePerBottle ?? null, passwordHash)
+    .bind(
+      input.name,
+      input.phone || null,
+      input.address,
+      input.houseNo ?? null,
+      input.defaultRatePerBottle ?? null,
+      input.notes ?? null,
+      passwordHash
+    )
     .first<CustomerRow>();
   return toCustomer(row!);
 }
@@ -330,7 +348,9 @@ export interface CustomerUpdateInput {
   name?: string;
   phone?: string | null;
   address?: string;
+  houseNo?: string | null;
   defaultRatePerBottle?: number | null;
+  notes?: string | null;
   /** undefined = leave unchanged, null = clear, string = set to this hash. */
   passwordHash?: string | null;
 }
@@ -354,15 +374,17 @@ export async function updateCustomer(
   }
 
   const row = await env.DB.prepare(
-    `UPDATE customers SET name = ?1, phone = ?2, address = ?3, default_rate_per_bottle = ?4,
-       password_hash = ?5, updated_at = datetime('now')
-     WHERE id = ?6 RETURNING *`
+    `UPDATE customers SET name = ?1, phone = ?2, address = ?3, house_no = ?4,
+       default_rate_per_bottle = ?5, notes = ?6, password_hash = ?7, updated_at = datetime('now')
+     WHERE id = ?8 RETURNING *`
   )
     .bind(
       input.name ?? existing.name,
       input.phone !== undefined ? input.phone || null : existing.phone,
       input.address ?? existing.address,
+      input.houseNo !== undefined ? input.houseNo : existing.houseNo,
       input.defaultRatePerBottle !== undefined ? input.defaultRatePerBottle : existing.defaultRatePerBottle,
+      input.notes !== undefined ? input.notes : existing.notes,
       passwordHash,
       id
     )
@@ -423,6 +445,7 @@ interface ExpenseRow {
   category: ExpenseCategory;
   amount: number;
   expense_date: string;
+  notes: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -434,6 +457,7 @@ function toExpense(r: ExpenseRow): Expense {
     category: r.category,
     amount: r.amount,
     expenseDate: r.expense_date,
+    notes: r.notes,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
   };
@@ -476,9 +500,9 @@ export async function getExpense(id: number): Promise<Expense | null> {
 export async function createExpense(input: NewExpenseInput): Promise<Expense> {
   const env = await getEnv();
   const row = await env.DB.prepare(
-    `INSERT INTO expenses (title, category, amount, expense_date) VALUES (?1, ?2, ?3, ?4) RETURNING *`
+    `INSERT INTO expenses (title, category, amount, expense_date, notes) VALUES (?1, ?2, ?3, ?4, ?5) RETURNING *`
   )
-    .bind(input.title, input.category, input.amount, input.expenseDate)
+    .bind(input.title, input.category, input.amount, input.expenseDate, input.notes ?? null)
     .first<ExpenseRow>();
   return toExpense(row!);
 }
@@ -488,6 +512,7 @@ export interface ExpenseUpdateInput {
   category?: ExpenseCategory;
   amount?: number;
   expenseDate?: string;
+  notes?: string | null;
 }
 
 export async function updateExpense(
@@ -499,14 +524,15 @@ export async function updateExpense(
   if (!existing) return null;
 
   const row = await env.DB.prepare(
-    `UPDATE expenses SET title = ?1, category = ?2, amount = ?3, expense_date = ?4, updated_at = datetime('now')
-     WHERE id = ?5 RETURNING *`
+    `UPDATE expenses SET title = ?1, category = ?2, amount = ?3, expense_date = ?4, notes = ?5, updated_at = datetime('now')
+     WHERE id = ?6 RETURNING *`
   )
     .bind(
       input.title ?? existing.title,
       input.category ?? existing.category,
       input.amount ?? existing.amount,
       input.expenseDate ?? existing.expenseDate,
+      input.notes !== undefined ? input.notes : existing.notes,
       id
     )
     .first<ExpenseRow>();
@@ -660,6 +686,7 @@ interface EmployeeRow {
   salary: number;
   joined_date: string;
   status: EmployeeStatus;
+  notes: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -673,6 +700,7 @@ function toEmployee(r: EmployeeRow): Employee {
     salary: r.salary,
     joinedDate: r.joined_date,
     status: r.status,
+    notes: r.notes,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
   };
@@ -719,10 +747,19 @@ export async function createEmployee(
 ): Promise<Employee> {
   const env = await getEnv();
   const row = await env.DB.prepare(
-    `INSERT INTO employees (name, phone, role, salary, joined_date, status, password_hash)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7) RETURNING *`
+    `INSERT INTO employees (name, phone, role, salary, joined_date, status, notes, password_hash)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8) RETURNING *`
   )
-    .bind(input.name, input.phone || null, input.role, input.salary, input.joinedDate, input.status, passwordHash)
+    .bind(
+      input.name,
+      input.phone || null,
+      input.role,
+      input.salary,
+      input.joinedDate,
+      input.status,
+      input.notes ?? null,
+      passwordHash
+    )
     .first<EmployeeRow>();
   return toEmployee(row!);
 }
@@ -734,6 +771,7 @@ export interface EmployeeUpdateInput {
   salary?: number;
   joinedDate?: string;
   status?: EmployeeStatus;
+  notes?: string | null;
   /** undefined = leave unchanged, null = clear, string = set to this hash. */
   passwordHash?: string | null;
 }
@@ -759,8 +797,8 @@ export async function updateEmployee(
   const row = await env.DB.prepare(
     `UPDATE employees SET
        name = ?1, phone = ?2, role = ?3, salary = ?4, joined_date = ?5, status = ?6,
-       password_hash = ?7, updated_at = datetime('now')
-     WHERE id = ?8 RETURNING *`
+       notes = ?7, password_hash = ?8, updated_at = datetime('now')
+     WHERE id = ?9 RETURNING *`
   )
     .bind(
       input.name ?? existing.name,
@@ -769,6 +807,7 @@ export async function updateEmployee(
       input.salary ?? existing.salary,
       input.joinedDate ?? existing.joinedDate,
       input.status ?? existing.status,
+      input.notes !== undefined ? input.notes : existing.notes,
       passwordHash,
       id
     )

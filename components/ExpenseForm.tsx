@@ -7,6 +7,7 @@ export interface ExpenseFormValue {
   category: ExpenseCategory;
   amount: number | "";
   expenseDate: string;
+  notes: string;
 }
 
 const inputClass =
@@ -74,6 +75,17 @@ export default function ExpenseForm({
           value={value.expenseDate}
           onChange={(e) => onChange({ ...value, expenseDate: e.target.value })}
           className={inputClass}
+        />
+      </div>
+
+      <div>
+        <label className={labelClass}>Notes (optional)</label>
+        <textarea
+          value={value.notes}
+          onChange={(e) => onChange({ ...value, notes: e.target.value })}
+          placeholder="Anything worth remembering about this expense..."
+          rows={3}
+          className={`${inputClass} resize-y leading-relaxed`}
         />
       </div>
     </div>

@@ -15,6 +15,7 @@ const EMPTY: OrderFormValue = {
   status: "pending",
   paymentStatus: "unpaid",
   assignedEmployeeId: null,
+  notes: "",
 };
 
 export default function NewOrderPage() {
@@ -90,6 +91,7 @@ function NewOrderForm() {
           status: form.status,
           paymentStatus: form.paymentStatus,
           assignedEmployeeId: form.assignedEmployeeId,
+          notes: form.notes.trim() || null,
         }),
       });
       const body = await res.json().catch(() => ({}));

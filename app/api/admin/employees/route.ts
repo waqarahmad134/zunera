@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
   const joinedDate = String(body?.joinedDate ?? "").trim();
   const status = (body?.status || "active") as EmployeeStatus;
   const password = body?.password ? String(body.password) : "";
+  const notes = body?.notes ? String(body.notes).trim() || null : null;
 
   if (!name) {
     return NextResponse.json({ error: "Name is required." }, { status: 400 });
@@ -67,7 +68,10 @@ export async function POST(req: NextRequest) {
 
   try {
     const passwordHash = password ? await hashPassword(password) : null;
-    const employee = await createEmployee({ name, phone, role, salary, joinedDate, status }, passwordHash);
+    const employee = await createEmployee(
+      { name, phone, role, salary, joinedDate, status, notes },
+      passwordHash
+    );
     return NextResponse.json({ employee }, { status: 201 });
   } catch (e) {
     return NextResponse.json(

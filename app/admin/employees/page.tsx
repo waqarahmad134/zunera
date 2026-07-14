@@ -25,6 +25,7 @@ function toFormValue(e: Employee): EmployeeFormValue {
     joinedDate: e.joinedDate,
     status: e.status,
     password: "",
+    notes: e.notes ?? "",
   };
 }
 
@@ -106,6 +107,7 @@ export default function EmployeesPage() {
           joinedDate: form.joinedDate,
           status: form.status,
           password: form.password,
+          notes: form.notes.trim() || null,
         }),
       });
       const body = await res.json().catch(() => ({}));

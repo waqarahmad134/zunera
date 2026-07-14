@@ -43,6 +43,7 @@ export async function PATCH(
     status?: OrderStatus;
     paymentStatus?: PaymentStatus;
     assignedEmployeeId?: number | null;
+    notes?: string | null;
   } = {};
 
   if (body.customerId !== undefined) {
@@ -107,6 +108,9 @@ export async function PATCH(
       }
       update.assignedEmployeeId = v;
     }
+  }
+  if (body.notes !== undefined) {
+    update.notes = body.notes ? String(body.notes).trim() || null : null;
   }
 
   try {

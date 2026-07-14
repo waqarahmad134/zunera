@@ -23,6 +23,8 @@ export async function POST(req: NextRequest) {
   const address = String(body?.address ?? "").trim();
   const phone = body?.phone ? String(body.phone).trim() : "";
   const password = body?.password ? String(body.password) : "";
+  const houseNo = body?.houseNo ? String(body.houseNo).trim() || null : null;
+  const notes = body?.notes ? String(body.notes).trim() || null : null;
 
   if (!name) {
     return NextResponse.json({ error: "Customer name is required." }, { status: 400 });
@@ -54,7 +56,10 @@ export async function POST(req: NextRequest) {
 
   try {
     const passwordHash = password ? await hashPassword(password) : null;
-    const customer = await createCustomer({ name, address, phone, defaultRatePerBottle }, passwordHash);
+    const customer = await createCustomer(
+      { name, address, phone, houseNo, defaultRatePerBottle, notes },
+      passwordHash
+    );
     return NextResponse.json({ customer }, { status: 201 });
   } catch (e) {
     return NextResponse.json(

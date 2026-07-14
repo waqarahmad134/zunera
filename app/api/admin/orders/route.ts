@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
   const status = (body?.status || "pending") as OrderStatus;
   const paymentStatus = (body?.paymentStatus || "unpaid") as PaymentStatus;
   const assignedEmployeeIdRaw = body?.assignedEmployeeId;
+  const notes = body?.notes ? String(body.notes).trim() || null : null;
 
   if (!Number.isInteger(customerId) || customerId <= 0) {
     return NextResponse.json({ error: "Select a customer for this order." }, { status: 400 });
@@ -87,7 +88,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "That customer no longer exists." }, { status: 400 });
     }
     const order = await createOrder({
-      customerId, address, bottles, ratePerBottle, status, paymentStatus, assignedEmployeeId,
+      customerId, address, bottles, ratePerBottle, status, paymentStatus, assignedEmployeeId, notes,
     });
     if (assignedEmployeeId) {
       await notify(

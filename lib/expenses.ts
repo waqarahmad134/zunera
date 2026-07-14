@@ -24,6 +24,7 @@ export interface Expense {
   category: ExpenseCategory;
   amount: number;
   expenseDate: string;
+  notes: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -33,4 +34,5 @@ export interface NewExpenseInput {
   category: ExpenseCategory;
   amount: number;
   expenseDate: string;
+  notes?: string | null;
 }

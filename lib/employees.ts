@@ -27,6 +27,7 @@ export interface Employee {
   salary: number;
   joinedDate: string;
   status: EmployeeStatus;
+  notes: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -38,4 +39,5 @@ export interface NewEmployeeInput {
   salary: number;
   joinedDate: string;
   status: EmployeeStatus;
+  notes?: string | null;
 }

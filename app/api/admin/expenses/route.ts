@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
   const category = body?.category as ExpenseCategory;
   const amount = Number(body?.amount);
   const expenseDate = String(body?.expenseDate ?? "").trim();
+  const notes = body?.notes ? String(body.notes).trim() || null : null;
 
   if (!title) {
     return NextResponse.json({ error: "Title is required." }, { status: 400 });
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const expense = await createExpense({ title, category, amount, expenseDate });
+    const expense = await createExpense({ title, category, amount, expenseDate, notes });
     return NextResponse.json({ expense }, { status: 201 });
   } catch (e) {
     return NextResponse.json(

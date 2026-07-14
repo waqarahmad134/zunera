@@ -37,7 +37,9 @@ export async function PATCH(
     name?: string;
     phone?: string | null;
     address?: string;
+    houseNo?: string | null;
     defaultRatePerBottle?: number | null;
+    notes?: string | null;
     passwordHash?: string | null;
   } = {};
 
@@ -60,6 +62,12 @@ export async function PATCH(
       );
     }
     update.phone = v;
+  }
+  if (body.houseNo !== undefined) {
+    update.houseNo = body.houseNo ? String(body.houseNo).trim() || null : null;
+  }
+  if (body.notes !== undefined) {
+    update.notes = body.notes ? String(body.notes).trim() || null : null;
   }
   if (body.defaultRatePerBottle !== undefined) {
     if (body.defaultRatePerBottle === "" || body.defaultRatePerBottle === null) {

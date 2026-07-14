@@ -21,6 +21,7 @@ export interface OrderFormValue {
   status: OrderStatus;
   paymentStatus: PaymentStatus;
   assignedEmployeeId: number | null;
+  notes: string;
 }
 
 const inputClass =
@@ -337,6 +338,17 @@ export default function OrderForm({
             An employee already set this once, so they can&apos;t change it again — you still can.
           </p>
         )}
+      </div>
+
+      <div>
+        <label className={labelClass}>Notes (optional)</label>
+        <textarea
+          value={value.notes}
+          onChange={(e) => onChange({ ...value, notes: e.target.value })}
+          placeholder="Anything worth remembering about this order..."
+          rows={3}
+          className={`${inputClass} resize-y leading-relaxed`}
+        />
       </div>
     </div>
   );

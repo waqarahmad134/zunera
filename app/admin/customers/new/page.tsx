@@ -7,7 +7,15 @@ import { ArrowLeft, Check, Loader2, Save, TriangleAlert } from "lucide-react";
 import AdminShell from "@/components/AdminShell";
 import CustomerForm, { type CustomerFormValue } from "@/components/CustomerForm";
 
-const EMPTY: CustomerFormValue = { name: "", phone: "", address: "", defaultRatePerBottle: "", password: "" };
+const EMPTY: CustomerFormValue = {
+  name: "",
+  phone: "",
+  houseNo: "",
+  address: "",
+  defaultRatePerBottle: "",
+  notes: "",
+  password: "",
+};
 
 export default function NewCustomerPage() {
   const router = useRouter();
@@ -29,8 +37,10 @@ export default function NewCustomerPage() {
         body: JSON.stringify({
           name: form.name.trim(),
           phone: form.phone.trim(),
+          houseNo: form.houseNo.trim() || null,
           address: form.address.trim(),
           defaultRatePerBottle: form.defaultRatePerBottle,
+          notes: form.notes.trim() || null,
           password: form.password,
         }),
       });

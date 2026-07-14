@@ -27,6 +27,7 @@ export async function PATCH(
     salary?: number;
     joinedDate?: string;
     status?: EmployeeStatus;
+    notes?: string | null;
     passwordHash?: string | null;
   } = {};
 
@@ -69,6 +70,9 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid status." }, { status: 400 });
     }
     update.status = body.status;
+  }
+  if (body.notes !== undefined) {
+    update.notes = body.notes ? String(body.notes).trim() || null : null;
   }
   if (body.password) {
     const existing = await getEmployee(id);

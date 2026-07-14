@@ -10,6 +10,7 @@ export interface EmployeeFormValue {
   joinedDate: string;
   status: EmployeeStatus;
   password: string;
+  notes: string;
 }
 
 const inputClass =
@@ -130,6 +131,17 @@ export default function EmployeeForm({
             );
           })}
         </div>
+      </div>
+
+      <div>
+        <label className={labelClass}>Notes (optional)</label>
+        <textarea
+          value={value.notes}
+          onChange={(e) => onChange({ ...value, notes: e.target.value })}
+          placeholder="Anything worth remembering about this employee..."
+          rows={3}
+          className={`${inputClass} resize-y leading-relaxed`}
+        />
       </div>
     </div>
   );
