@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    // Same keypair the Cloudflare deployment shipped with, so existing
+    // browser push subscriptions (created against the old public key) keep
+    // working if a device's endpoint carries over. Override both in
+    // production with your own VAPID keypair.
+    'vapid' => [
+        'public_key' => env('VAPID_PUBLIC_KEY', 'BFhMi-1tAz6ONdeaB-kkc5p7QNTIXtgM0ffylFZOurVejckdfvPRWTnpepJctQ-2UgBvT9DmCxAVRUOOFnHo1Zo'),
+        'private_key' => env('VAPID_PRIVATE_KEY', 'pcfaP0KeCvXqdQLfUVEBRmu4yXi9UgKTLySbONTPXds'),
+    ],
+
 ];
