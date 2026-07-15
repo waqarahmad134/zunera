@@ -7,12 +7,14 @@ import Image from "@tiptap/extension-image";
 import {
   Bold, Italic, Underline as UnderlineIcon, Heading2, Heading3, List,
   ListOrdered, Quote, Link2, Link2Off, ImagePlus, Undo2, Redo2, Loader2,
+  CreditCard,
 } from "lucide-react";
 import {
   ACCEPTED_IMAGE_TYPES,
   fileToDataUrl,
   imageSizeError,
 } from "@/lib/clientImages";
+import { PubCard } from "@/components/admin/PubCardNode";
 
 function ToolbarButton({
   onClick,
@@ -64,6 +66,7 @@ export default function RichTextEditor({
         link: { openOnClick: false },
       }),
       Image,
+      PubCard,
     ],
     content: value || "<p></p>",
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
@@ -192,6 +195,14 @@ export default function RichTextEditor({
           ) : (
             <ImagePlus size={15} />
           )}
+        </ToolbarButton>
+        <ToolbarButton
+          title="Insert card"
+          onClick={() =>
+            editor.chain().focus().insertContent({ type: "pubCard", attrs: {} }).run()
+          }
+        >
+          <CreditCard size={15} />
         </ToolbarButton>
         <span className="mx-1 h-5 w-px bg-line" />
         <ToolbarButton
