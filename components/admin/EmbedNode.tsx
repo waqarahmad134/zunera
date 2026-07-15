@@ -7,7 +7,7 @@ import {
   NodeViewWrapper,
   type ReactNodeViewProps,
 } from "@tiptap/react";
-import { Trash2 } from "lucide-react";
+import { GripVertical, Trash2 } from "lucide-react";
 
 // A video embed block. Accepts a YouTube/Vimeo link OR a full <iframe> embed
 // code, and always renders a clean iframe pointing at the provider's embed URL
@@ -60,9 +60,19 @@ function EmbedView({ node, updateAttributes, deleteNode }: ReactNodeViewProps) {
       contentEditable={false}
     >
       <div className="mb-2.5 flex items-center justify-between">
-        <span className="text-[11px] font-semibold uppercase tracking-wide text-accent">
-          Video
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span
+            data-drag-handle
+            draggable="true"
+            title="Drag to move (e.g. into a column)"
+            className="cursor-grab text-ink-soft/50 hover:text-ink-soft active:cursor-grabbing"
+          >
+            <GripVertical size={15} />
+          </span>
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-accent">
+            Video
+          </span>
+        </div>
         <button
           type="button"
           onClick={() => deleteNode()}
@@ -103,6 +113,7 @@ export const Embed = Node.create({
   group: "block",
   atom: true,
   selectable: true,
+  draggable: true,
 
   addAttributes() {
     return {

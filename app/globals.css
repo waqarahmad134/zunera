@@ -345,6 +345,33 @@ a.pub-card--compact::after {
   }
 }
 
+/* In the editor only, outline the columns so the layout is obvious and each
+   column is a clear drop target. These styles never reach the public page. */
+.tiptap .cols {
+  gap: 0.75rem;
+  padding: 0.6rem;
+  border: 1px dashed color-mix(in srgb, var(--color-accent) 35%, var(--color-line));
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--color-accent) 3%, transparent);
+}
+.tiptap .col {
+  min-height: 4.5rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px dashed var(--color-line);
+  border-radius: 0.6rem;
+  background: var(--color-paper);
+}
+/* Placeholder hint text for empty paragraphs (incl. inside columns). */
+.tiptap .is-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--color-ink-soft);
+  opacity: 0.5;
+  font-size: 0.9rem;
+}
+
 /* Tables */
 .prose-z table,
 .rich table {

@@ -6,7 +6,7 @@ import {
   NodeViewWrapper,
   type ReactNodeViewProps,
 } from "@tiptap/react";
-import { Trash2 } from "lucide-react";
+import { GripVertical, Trash2 } from "lucide-react";
 
 // A "card" block with three visual variants, matching the site's card styles:
 //   paper   — year · title · subtitle · meta (compact publication row)
@@ -89,17 +89,27 @@ function PubCardView({ node, updateAttributes, deleteNode }: ReactNodeViewProps)
       contentEditable={false}
     >
       <div className="mb-2.5 flex items-center justify-between gap-2">
-        <select
-          value={variant}
-          onChange={(e) => updateAttributes({ variant: e.target.value })}
-          className="rounded-md border border-line bg-white px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-accent outline-none"
-        >
-          {Object.entries(CARD_VARIANTS).map(([key, v]) => (
-            <option key={key} value={key}>
-              {v.label}
-            </option>
-          ))}
-        </select>
+        <div className="flex items-center gap-1.5">
+          <span
+            data-drag-handle
+            draggable="true"
+            title="Drag to move (e.g. into a column)"
+            className="cursor-grab text-ink-soft/50 hover:text-ink-soft active:cursor-grabbing"
+          >
+            <GripVertical size={15} />
+          </span>
+          <select
+            value={variant}
+            onChange={(e) => updateAttributes({ variant: e.target.value })}
+            className="rounded-md border border-line bg-white px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-accent outline-none"
+          >
+            {Object.entries(CARD_VARIANTS).map(([key, v]) => (
+              <option key={key} value={key}>
+                {v.label}
+              </option>
+            ))}
+          </select>
+        </div>
         <button
           type="button"
           onClick={() => deleteNode()}
@@ -139,6 +149,7 @@ export const PubCard = Node.create({
   group: "block",
   atom: true,
   selectable: true,
+  draggable: true,
 
   addAttributes() {
     const attrs: Record<string, unknown> = {};

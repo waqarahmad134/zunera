@@ -5,6 +5,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import { TableKit } from "@tiptap/extension-table";
+import { Placeholder } from "@tiptap/extensions";
 import {
   Bold, Italic, Underline as UnderlineIcon, Heading2, Heading3, List,
   ListOrdered, Quote, Link2, Link2Off, ImagePlus, Undo2, Redo2, Loader2,
@@ -77,6 +78,14 @@ export default function RichTextEditor({
       Columns,
       Column,
       TableKit.configure({ table: { resizable: true } }),
+      Placeholder.configure({
+        includeChildren: true,
+        showOnlyCurrent: false,
+        placeholder: ({ node }) =>
+          node.type.name === "paragraph"
+            ? "Click here, then add text, a card or a video…"
+            : "",
+      }),
     ],
     content: value || "<p></p>",
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
