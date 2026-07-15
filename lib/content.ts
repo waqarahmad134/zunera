@@ -9,16 +9,13 @@ import { DEFAULT_NAV, resolveNavItem } from "./data";
 import type {
   Affiliation,
   Category,
-  Chapter,
   CustomPage,
-  InProgress,
   Interview,
   NavItem,
   NavLink,
   Opinion,
   PagesMap,
   Paper,
-  Policy,
   Post,
   Seo,
   Site,
@@ -111,28 +108,12 @@ export async function getPapers(): Promise<Paper[]> {
   return papers.map((p) => ({ ...p, coAuthors: p.coAuthors || null }));
 }
 
-export async function getChapters(): Promise<Chapter[]> {
-  const chapters = await readSection<Omit<Chapter, "editors"> & { editors?: string }>(
-    "chapters"
-  );
-  return chapters.map((c) => ({ ...c, editors: c.editors || null }));
-}
-
-export async function getInProgress(): Promise<InProgress[]> {
-  return readSection<InProgress>("in-progress");
-}
-
 export async function getOpinions(): Promise<Opinion[]> {
   return readSection<Opinion>("opinions");
 }
 
 export async function getInterviews(): Promise<Interview[]> {
   return readSection<Interview>("interviews");
-}
-
-export async function getPolicy(): Promise<Policy[]> {
-  const policy = await readSection<Omit<Policy, "date"> & { date?: string }>("policy");
-  return policy.map((p) => ({ ...p, date: p.date || null }));
 }
 
 export async function getCategories(): Promise<Category[]> {

@@ -93,10 +93,7 @@ export const SECTIONS: SectionDef[] = [
     fields: [
       { key: "blog", label: "Blog", type: "checkbox", checkboxLabel: "Show \"Coming soon\" instead of the Blog page" },
       { key: "papers", label: "Papers", type: "checkbox", checkboxLabel: "Show \"Coming soon\" instead of the Papers page" },
-      { key: "chapters", label: "Book Chapters", type: "checkbox", checkboxLabel: "Show \"Coming soon\" instead of the Chapters page" },
-      { key: "in-progress", label: "In Progress", type: "checkbox", checkboxLabel: "Show \"Coming soon\" instead of the In Progress page" },
       { key: "commentary", label: "Commentary", type: "checkbox", checkboxLabel: "Show \"Coming soon\" instead of the Commentary page" },
-      { key: "policy", label: "Policy", type: "checkbox", checkboxLabel: "Show \"Coming soon\" instead of the Policy page" },
     ],
   },
   {
@@ -210,7 +207,7 @@ export const SECTIONS: SectionDef[] = [
         key: "slug",
         label: "Slug (in the URL)",
         type: "slug",
-        help: "The page will live at /your-slug. Use \"cv\" to fill the CV page, or \"books\" for your books page. Avoid other names already used by the site (papers, blog, policy, contact, chapters, commentary, in-progress).",
+        help: "The page will live at /your-slug. Free slugs include cv, books, chapters, policy and in-progress. Avoid names still used by the site (papers, blog, commentary, contact).",
       },
       {
         key: "content",
@@ -254,37 +251,6 @@ export const SECTIONS: SectionDef[] = [
     ],
   },
   {
-    slug: "chapters",
-    label: "Book Chapters",
-    description: "Chapters in edited volumes.",
-    itemTitleKey: "title",
-    columns: ["title", "year", "book", "publisher"],
-    fields: [
-      { key: "title", label: "Title", type: "text" },
-      { key: "year", label: "Year", type: "number" },
-      { key: "book", label: "Book", type: "text" },
-      { key: "editors", label: "Editors (optional)", type: "text" },
-      { key: "publisher", label: "Publisher", type: "text" },
-      { key: "href", label: "Link", type: "url" },
-    ],
-  },
-  {
-    slug: "in-progress",
-    label: "In Progress",
-    description: "Ongoing research projects.",
-    itemTitleKey: "title",
-    columns: ["title", "description"],
-    fields: [
-      { key: "title", label: "Title", type: "text" },
-      {
-        key: "description",
-        label: "Description",
-        type: "richtext",
-        help: "Use the toolbar for bold, italics, links and lists.",
-      },
-    ],
-  },
-  {
     slug: "opinions",
     label: "Opinions",
     description: "Op-eds and public writing.",
@@ -309,20 +275,6 @@ export const SECTIONS: SectionDef[] = [
       { key: "year", label: "Year", type: "number" },
       { key: "date", label: "Date (e.g. 12 Feb 2023)", type: "text" },
       { key: "outlet", label: "Outlet", type: "text" },
-      { key: "href", label: "Link", type: "url" },
-    ],
-  },
-  {
-    slug: "policy",
-    label: "Policy",
-    description: "Policy reports and briefs.",
-    itemTitleKey: "title",
-    columns: ["title", "org", "date", "year"],
-    fields: [
-      { key: "title", label: "Title", type: "text" },
-      { key: "year", label: "Year", type: "number" },
-      { key: "date", label: "Date (optional)", type: "text" },
-      { key: "org", label: "Organisation", type: "text" },
       { key: "href", label: "Link", type: "url" },
     ],
   },

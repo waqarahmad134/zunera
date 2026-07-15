@@ -58,20 +58,6 @@ export interface Paper {
   href: string;
 }
 
-export interface Chapter {
-  year: number;
-  title: string;
-  book: string;
-  editors: string | null;
-  publisher: string;
-  href: string;
-}
-
-export interface InProgress {
-  title: string;
-  description: string;
-}
-
 export interface Opinion {
   year: number;
   date: string;
@@ -85,14 +71,6 @@ export interface Interview {
   date: string;
   title: string;
   outlet: string;
-  href: string;
-}
-
-export interface Policy {
-  year: number;
-  title: string;
-  date: string | null;
-  org: string;
   href: string;
 }
 
@@ -117,10 +95,7 @@ export interface Post {
 export const SITE_PAGES: { label: string; path: string }[] = [
   { label: "Home", path: "/" },
   { label: "Papers", path: "/papers" },
-  { label: "Book Chapters", path: "/chapters" },
-  { label: "In Progress", path: "/in-progress" },
   { label: "Commentary", path: "/commentary" },
-  { label: "Policy", path: "/policy" },
   { label: "Blog", path: "/blog" },
   { label: "CV", path: "/cv" },
   { label: "Contact", path: "/contact" },
@@ -138,8 +113,8 @@ export interface CustomPage {
 // Slugs that already belong to built-in routes; a custom page must not use
 // these (the built-in route would shadow it).
 export const RESERVED_SLUGS = [
-  "", "admin", "api", "uploads", "papers", "chapters",
-  "in-progress", "commentary", "policy", "blog", "cv", "contact",
+  "", "admin", "api", "uploads", "papers",
+  "commentary", "blog", "cv", "contact",
   "sitemap.xml", "robots.txt", "llms.txt", "icon.svg", "favicon.ico",
 ];
 
@@ -169,10 +144,7 @@ export interface NavLink {
 /** Default menu, used to seed the DB and as a fallback before it is seeded. */
 export const DEFAULT_NAV: NavItem[] = [
   { label: "Papers", kind: "page", page: "/papers", url: "" },
-  { label: "Chapters", kind: "page", page: "/chapters", url: "" },
-  { label: "In Progress", kind: "page", page: "/in-progress", url: "" },
   { label: "Commentary", kind: "page", page: "/commentary", url: "" },
-  { label: "Policy", kind: "page", page: "/policy", url: "" },
   { label: "Blog", kind: "page", page: "/blog", url: "" },
   { label: "CV", kind: "page", page: "/cv", url: "" },
   { label: "Contact", kind: "page", page: "/contact", url: "" },

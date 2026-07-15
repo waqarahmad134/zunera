@@ -20,11 +20,8 @@ const COLLECTIONS = [
   "custom-pages",
   "affiliations",
   "papers",
-  "chapters",
-  "in-progress",
   "opinions",
   "interviews",
-  "policy",
   "categories",
   "posts",
 ];

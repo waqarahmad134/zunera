@@ -1,6 +1,5 @@
 import {
-  getSite, getPapers, getChapters, getInProgress, getOpinions,
-  getInterviews, getPolicy, getPosts, getCategories,
+  getSite, getPapers, getOpinions, getInterviews, getPosts, getCategories,
 } from "@/lib/content";
 import { siteUrl } from "@/lib/seo";
 
@@ -9,13 +8,11 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const base = siteUrl();
 
-  const [
-    site, papers, chapters, inProgress, opinions, interviews,
-    policy, posts, categories,
-  ] = await Promise.all([
-    getSite(), getPapers(), getChapters(), getInProgress(),
-    getOpinions(), getInterviews(), getPolicy(), getPosts(), getCategories(),
-  ]);
+  const [site, papers, opinions, interviews, posts, categories] =
+    await Promise.all([
+      getSite(), getPapers(), getOpinions(), getInterviews(),
+      getPosts(), getCategories(),
+    ]);
 
   const lines: string[] = [
     `# ${site.name}`,
@@ -33,10 +30,7 @@ export async function GET() {
     "",
     `- [Home](${base}/): Profile and recent work`,
     `- [Papers](${base}/papers): Peer-reviewed journal articles`,
-    `- [Book Chapters](${base}/chapters): Chapters in edited volumes`,
-    `- [In Progress](${base}/in-progress): Ongoing research projects`,
     `- [Commentary](${base}/commentary): Op-eds and media interviews`,
-    `- [Policy](${base}/policy): Policy reports and briefs`,
     `- [Blog](${base}/blog): Notes and reflections`,
     `- [Contact](${base}/contact): Email and social profiles`,
     "",
@@ -46,20 +40,6 @@ export async function GET() {
       (p) =>
         `- (${p.year}) ${p.title}${p.coAuthors ? `, ${p.coAuthors}` : ""}. ${p.journal}. ${p.href}`
     ),
-    "",
-    "## Book Chapters",
-    "",
-    ...chapters.map(
-      (c) => `- (${c.year}) ${c.title}. In: ${c.book} (${c.publisher}). ${c.href}`
-    ),
-    "",
-    "## Research In Progress",
-    "",
-    ...inProgress.map((p) => `- ${p.title}: ${p.description}`),
-    "",
-    "## Policy Publications",
-    "",
-    ...policy.map((p) => `- (${p.year}) ${p.title}. ${p.org}. ${p.href}`),
     "",
     "## Selected Commentary",
     "",

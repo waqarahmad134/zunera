@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, ArrowUpRight, FileText, Newspaper, Landmark } from "lucide-react";
+import { ArrowRight, ArrowUpRight, FileText, Newspaper } from "lucide-react";
 import {
-  getSite, getPapers, getOpinions, getInterviews, getPolicy, getChapters,
+  getSite, getPapers, getOpinions, getInterviews,
 } from "@/lib/content";
 import { HeroText, Reveal, StaggerList, StaggerItem } from "@/components/motion";
 import { siteUrl } from "@/lib/seo";
@@ -13,15 +13,12 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const [site, papers, opinions, interviews, policy, chapters] =
-    await Promise.all([
-      getSite(),
-      getPapers(),
-      getOpinions(),
-      getInterviews(),
-      getPolicy(),
-      getChapters(),
-    ]);
+  const [site, papers, opinions, interviews] = await Promise.all([
+    getSite(),
+    getPapers(),
+    getOpinions(),
+    getInterviews(),
+  ]);
 
   const personLd = {
     "@context": "https://schema.org",
@@ -42,7 +39,6 @@ export default async function Home() {
   const stats = [
     { label: "Peer-reviewed papers", value: papers.length, href: "/papers", icon: FileText },
     { label: "Commentary & media", value: opinions.length + interviews.length, href: "/commentary", icon: Newspaper },
-    { label: "Policy publications", value: policy.length, href: "/policy", icon: Landmark },
   ];
 
   return (
@@ -130,7 +126,7 @@ export default async function Home() {
 
       {/* Stats */}
       <section className="mx-auto max-w-6xl px-5 sm:px-8">
-        <StaggerList className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StaggerList className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {stats.map((s) => (
             <StaggerItem key={s.label}>
               <Link
@@ -224,7 +220,7 @@ export default async function Home() {
         </StaggerList>
       </section>
 
-      {/* Chapters teaser */}
+      {/* Commentary teaser */}
       <section className="mx-auto max-w-6xl px-5 sm:px-8 mt-24">
         <Reveal>
           <div className="rounded-3xl bg-ink text-paper p-8 sm:p-12 relative overflow-hidden">
@@ -234,13 +230,12 @@ export default async function Home() {
             />
             <div className="relative">
               <h2 className="font-serif text-3xl sm:text-4xl max-w-xl leading-tight">
-                Book chapters, commentary &amp; policy writing
+                Commentary &amp; media
               </h2>
               <p className="mt-4 text-paper/70 max-w-xl leading-relaxed">
-                {chapters.length} book chapters, {opinions.length} opinion pieces,{" "}
-                {interviews.length} media interviews and {policy.length} policy
-                publications, spanning DAWN, The New York Times, BBC, the
-                Carnegie Endowment and more.
+                {opinions.length} opinion pieces and {interviews.length} media
+                interviews, spanning DAWN, The New York Times, BBC, the Carnegie
+                Endowment and more.
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
                 <Link
@@ -248,12 +243,6 @@ export default async function Home() {
                   className="inline-flex items-center gap-2 rounded-full bg-paper text-ink px-6 py-3 text-sm font-medium transition-all duration-300 hover:bg-accent hover:text-paper hover:gap-3"
                 >
                   Read commentary <ArrowRight size={16} />
-                </Link>
-                <Link
-                  href="/policy"
-                  className="inline-flex items-center gap-2 rounded-full border border-paper/30 px-6 py-3 text-sm font-medium text-paper/90 transition-all duration-300 hover:border-paper hover:gap-3"
-                >
-                  Policy work <ArrowRight size={16} />
                 </Link>
               </div>
             </div>

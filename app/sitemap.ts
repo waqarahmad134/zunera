@@ -16,10 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Routes tied to a toggleable section; excluded while "Coming soon".
   const sectionRoutes = [
     { slug: "papers", priority: 0.9 },
-    { slug: "chapters", priority: 0.8 },
-    { slug: "in-progress", priority: 0.7 },
     { slug: "commentary", priority: 0.8 },
-    { slug: "policy", priority: 0.8 },
     { slug: "blog", priority: 0.8 },
   ].filter((r) => !comingSoon(r.slug));
 
