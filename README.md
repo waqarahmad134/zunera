@@ -1,41 +1,41 @@
-This is a [Next.js](https://nextjs.org) project that runs on **Cloudflare
-Workers**, with content in **Cloudflare D1** and images in **Cloudflare R2**.
+# Zunera
+
+Personal academic site for Zunera — publications, commentary, policy work and a
+blog — with a built-in admin panel for managing all content.
+
+Built with **Next.js** (App Router) and deployed on **Cloudflare Workers**:
+content lives in **Cloudflare D1** (SQL) and images in **Cloudflare R2** (object
+storage). No external CMS or database server.
 
 > **Deploying or setting up Cloudflare?** See [CLOUDFLARE.md](./CLOUDFLARE.md)
-> for the bindings, one-time setup (D1 + R2 + secrets), seeding and deploy
-> commands.
+> for bindings, one-time setup (D1 + R2 + secrets), seeding and deploy commands.
 
-## Getting Started
-
-First, run the development server:
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). Local dev uses the
+Miniflare D1/R2 simulators (see CLOUDFLARE.md for migrating and seeding the
+local database). The admin panel is at [/admin](http://localhost:3000/admin).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Next.js dev server (local D1/R2 simulators) |
+| `npm run build` | Production Next.js build |
+| `npm run preview` | Build + run the real Cloudflare Workers runtime locally |
+| `npm run deploy` | Build + deploy to Cloudflare |
+| `npm run db:migrate` / `db:seed` | Apply D1 migrations / seed content (remote) |
+| `npm run media:upload` | Push local images to the R2 bucket (remote) |
 
-## Learn More
+## Project layout
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `app/` — pages and admin, plus the content/media API routes (`app/api/admin/*`)
+- `lib/content.ts` — server-side content reads from D1
+- `lib/db.ts`, `lib/cf.ts` — D1/R2 bindings access
+- `migrations/` — D1 schema
+- `content/*.json` — seed data for D1

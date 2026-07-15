@@ -2,9 +2,9 @@
 
 This site runs on **Cloudflare Workers** via [OpenNext](https://opennext.js.org/cloudflare).
 All content lives in **Cloudflare D1** (SQL) and all uploaded images live in
-**Cloudflare R2** (object storage). There is no database server, no GitHub
-commit step, and no Vercel — the admin panel writes straight to D1/R2 and
-changes are live on the next request.
+**Cloudflare R2** (object storage). There is no database server and no GitHub
+commit step — the admin panel writes straight to D1/R2 and changes are live on
+the next request.
 
 ## How it fits together
 
