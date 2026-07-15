@@ -170,9 +170,10 @@ export default async function Home() {
             </p>
           </Reveal>
           <Reveal delay={0.15}>
-            <p className="mt-5 text-ink-soft leading-relaxed max-w-2xl">
-              {books[0].description}
-            </p>
+            <div
+              className="rich mt-5 text-ink-soft leading-relaxed max-w-2xl"
+              dangerouslySetInnerHTML={{ __html: books[0].description }}
+            />
           </Reveal>
           <Reveal delay={0.2}>
             <div className="mt-7 flex flex-wrap gap-4">

@@ -158,7 +158,12 @@ export const SECTIONS: SectionDef[] = [
       { key: "publisher", label: "Publisher", type: "text" },
       { key: "role", label: "Role (e.g. Author)", type: "text" },
       { key: "href", label: "Link", type: "url" },
-      { key: "description", label: "Description", type: "textarea" },
+      {
+        key: "description",
+        label: "Description",
+        type: "richtext",
+        help: "Use the toolbar for bold, italics, links and lists.",
+      },
     ],
   },
   {
@@ -198,7 +203,12 @@ export const SECTIONS: SectionDef[] = [
     columns: ["title", "description"],
     fields: [
       { key: "title", label: "Title", type: "text" },
-      { key: "description", label: "Description", type: "textarea" },
+      {
+        key: "description",
+        label: "Description",
+        type: "richtext",
+        help: "Use the toolbar for bold, italics, links and lists.",
+      },
     ],
   },
   {

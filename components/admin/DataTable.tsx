@@ -41,6 +41,14 @@ function CellValue({
   if (field.type === "tags") {
     return <span>{Array.isArray(value) ? value.join(", ") : "—"}</span>;
   }
+  if (field.type === "richtext") {
+    // Show a plain-text preview of the HTML content in the table cell.
+    const text = String(value ?? "")
+      .replace(/<[^>]*>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    return <span>{text || <span className="text-ink-soft/50">—</span>}</span>;
+  }
   const text = value === null || value === undefined || value === "" ? "" : String(value);
   return <span>{text || <span className="text-ink-soft/50">—</span>}</span>;
 }

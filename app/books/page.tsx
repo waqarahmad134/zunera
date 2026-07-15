@@ -40,9 +40,10 @@ export default async function BooksPage() {
                     {b.title}
                   </h2>
                   <p className="mt-2 text-sm text-ink-soft italic">{b.publisher}</p>
-                  <p className="mt-5 text-ink-soft leading-relaxed max-w-2xl">
-                    {b.description}
-                  </p>
+                  <div
+                    className="rich mt-5 text-ink-soft leading-relaxed max-w-2xl"
+                    dangerouslySetInnerHTML={{ __html: b.description }}
+                  />
                 </div>
                 <ArrowUpRight
                   size={22}

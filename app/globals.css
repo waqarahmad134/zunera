@@ -118,3 +118,41 @@ body {
 .prose-z u {
   text-underline-offset: 3px;
 }
+
+/* Inline rich text (short descriptions in cards/lists). Inherits the
+   surrounding font size; just styles the basic formatting marks. */
+.rich > :first-child {
+  margin-top: 0;
+}
+.rich > :last-child {
+  margin-bottom: 0;
+}
+.rich p {
+  margin: 0 0 0.75em;
+}
+.rich strong {
+  font-weight: 600;
+  color: inherit;
+}
+.rich em {
+  font-style: italic;
+}
+.rich a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.rich ul,
+.rich ol {
+  margin: 0.5em 0;
+  padding-left: 1.2em;
+}
+.rich ul {
+  list-style: disc;
+}
+.rich ol {
+  list-style: decimal;
+}
+.rich li {
+  margin-bottom: 0.25em;
+}

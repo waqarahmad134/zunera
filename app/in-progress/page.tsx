@@ -30,9 +30,10 @@ export default async function InProgressPage() {
               <h2 className="mt-4 font-serif text-xl leading-snug group-hover:text-accent-deep transition-colors">
                 {p.title}
               </h2>
-              <p className="mt-3 text-sm text-ink-soft leading-relaxed">
-                {p.description}
-              </p>
+              <div
+                className="rich mt-3 text-sm text-ink-soft leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: p.description }}
+              />
             </div>
           </StaggerItem>
         ))}
