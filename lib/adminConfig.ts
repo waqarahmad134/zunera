@@ -28,6 +28,8 @@ export interface Field {
   help?: string;
   /** Custom label shown next to a checkbox (overrides the default visible/hidden text). */
   checkboxLabel?: string;
+  /** Value used for this field when creating a new item (defaults per type otherwise). */
+  defaultValue?: unknown;
 }
 
 export interface SectionDef {
@@ -44,6 +46,11 @@ export interface SectionDef {
    * non-singleton sections; each key must match a `fields[].key`.
    */
   columns?: string[];
+  /**
+   * A boolean field key that renders as an inline on/off toggle in the list
+   * table (a "Status" column). Toggling it saves immediately.
+   */
+  toggleField?: string;
 }
 
 export const SECTIONS: SectionDef[] = [
@@ -142,9 +149,10 @@ export const SECTIONS: SectionDef[] = [
     slug: "nav",
     label: "Navigation Menu",
     description:
-      "The main site menu. Reorder with the arrows; link each item to a page on the site or a custom URL.",
+      "The main site menu. Reorder with the arrows, toggle items on or off, and link each to a page or a custom URL.",
     itemTitleKey: "label",
     columns: ["label", "kind", "page", "url"],
+    toggleField: "active",
     fields: [
       { key: "label", label: "Menu label", type: "text" },
       {
@@ -180,6 +188,13 @@ export const SECTIONS: SectionDef[] = [
         type: "url",
         placeholder: "https://example.com",
         help: "Used when \"Links to\" is set to a custom URL. External links open in a new tab.",
+      },
+      {
+        key: "active",
+        label: "Status",
+        type: "checkbox",
+        checkboxLabel: "Show this item in the menu",
+        defaultValue: true,
       },
     ],
   },

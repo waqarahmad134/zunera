@@ -164,6 +164,31 @@ export default function SectionPage() {
     update(list.filter((_, j) => j !== i));
   }
 
+  // Flip the toggle field and save immediately (active/inactive is a quick,
+  // stand-alone action, so it shouldn't need a separate Save click).
+  async function toggleItem(i: number) {
+    const key = def!.toggleField!;
+    const next = list.map((it, j) =>
+      j === i ? { ...it, [key]: it[key] === false } : it
+    );
+    setData(next);
+    setSaving(true);
+    setMsg(null);
+    const res = await fetch("/api/admin/content", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ section: def!.slug, data: next }),
+    });
+    setSaving(false);
+    if (res.ok) {
+      setDirty(false);
+      setMsg({ ok: true, text: "Saved. Changes are live on the website immediately." });
+    } else {
+      const body = await res.json().catch(() => ({}));
+      setMsg({ ok: false, text: body.error || "Save failed." });
+    }
+  }
+
   return (
     <AdminShell title={def.label}>
       <DataTable
@@ -174,6 +199,7 @@ export default function SectionPage() {
         onAddNew={() => router.push(`/admin/${def.slug}/new`)}
         onMove={moveItem}
         onDelete={deleteItem}
+        onToggle={def.toggleField ? toggleItem : undefined}
       />
       {/* Save bar only matters for reorder/delete done on this page. */}
       {dirty && saveBar}

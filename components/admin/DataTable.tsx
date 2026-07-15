@@ -54,6 +54,36 @@ function CellValue({
   return <span>{text || <span className="text-ink-soft/50">—</span>}</span>;
 }
 
+function StatusToggle({
+  on,
+  onToggle,
+}: {
+  on: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggle();
+      }}
+      title={on ? "Active — click to hide" : "Hidden — click to show"}
+      className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
+        on ? "bg-accent" : "bg-line"
+      }`}
+    >
+      <span
+        className={`inline-block size-4 transform rounded-full bg-white shadow transition-transform ${
+          on ? "translate-x-4" : "translate-x-0.5"
+        }`}
+      />
+    </button>
+  );
+}
+
 export default function DataTable({
   def,
   items,
@@ -62,6 +92,7 @@ export default function DataTable({
   onAddNew,
   onMove,
   onDelete,
+  onToggle,
 }: {
   def: SectionDef;
   items: Item[];
@@ -70,9 +101,11 @@ export default function DataTable({
   onAddNew: () => void;
   onMove: (index: number, dir: -1 | 1) => void;
   onDelete: (index: number) => void;
+  onToggle?: (index: number) => void;
 }) {
   const columnKeys = def.columns ?? [def.itemTitleKey];
   const columns = columnKeys.map((key) => def.fields.find((f) => f.key === key));
+  const toggleKey = def.toggleField;
 
   return (
     <div className="rounded-2xl border border-line bg-white/70 overflow-hidden">
@@ -106,6 +139,11 @@ export default function DataTable({
                     {f?.label ?? ""}
                   </th>
                 ))}
+                {toggleKey && onToggle && (
+                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-ink-soft whitespace-nowrap">
+                    Status
+                  </th>
+                )}
                 <th className="px-4 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wide text-ink-soft whitespace-nowrap">
                   Actions
                 </th>
@@ -137,6 +175,14 @@ export default function DataTable({
                         />
                       </td>
                     ))}
+                    {toggleKey && onToggle && (
+                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                        <StatusToggle
+                          on={item[toggleKey] !== false}
+                          onToggle={() => onToggle(i)}
+                        />
+                      </td>
+                    )}
                     <td className="px-4 py-3">
                       <div
                         className="flex items-center justify-end gap-0.5"

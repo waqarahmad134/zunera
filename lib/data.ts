@@ -165,6 +165,8 @@ export interface NavItem {
   /** Slug of a custom page, when kind === "custom-page". */
   pageSlug?: string;
   url: string;
+  /** When false, the item is hidden from the live menu. Undefined = active. */
+  active?: boolean;
 }
 
 /** A resolved menu entry consumed by the Nav/Footer UI. */
@@ -189,6 +191,7 @@ export const DEFAULT_NAV: NavItem[] = [
 
 /** Resolve a stored nav item into a usable link. */
 export function resolveNavItem(item: NavItem): NavLink | null {
+  if (item.active === false) return null;
   let href = "";
   let external = false;
   if (item.kind === "custom") {

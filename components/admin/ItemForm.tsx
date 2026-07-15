@@ -25,7 +25,8 @@ export function slugify(text: string) {
 export function emptyItem(fields: Field[]): Item {
   const item: Item = {};
   for (const f of fields) {
-    if (f.type === "number") item[f.key] = new Date().getFullYear();
+    if (f.defaultValue !== undefined) item[f.key] = f.defaultValue;
+    else if (f.type === "number") item[f.key] = new Date().getFullYear();
     else if (f.type === "checkbox") item[f.key] = false;
     else if (f.type === "tags") item[f.key] = [];
     else item[f.key] = "";
