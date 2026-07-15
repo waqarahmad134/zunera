@@ -7,7 +7,7 @@ import Image from "@tiptap/extension-image";
 import {
   Bold, Italic, Underline as UnderlineIcon, Heading2, Heading3, List,
   ListOrdered, Quote, Link2, Link2Off, ImagePlus, Undo2, Redo2, Loader2,
-  CreditCard,
+  CreditCard, Video,
 } from "lucide-react";
 import {
   ACCEPTED_IMAGE_TYPES,
@@ -15,6 +15,7 @@ import {
   imageSizeError,
 } from "@/lib/clientImages";
 import { PubCard, CARD_VARIANTS } from "@/components/admin/PubCardNode";
+import { Embed } from "@/components/admin/EmbedNode";
 
 function ToolbarButton({
   onClick,
@@ -68,6 +69,7 @@ export default function RichTextEditor({
       }),
       Image,
       PubCard,
+      Embed,
     ],
     content: value || "<p></p>",
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
@@ -234,6 +236,14 @@ export default function RichTextEditor({
             </>
           )}
         </div>
+        <ToolbarButton
+          title="Insert video"
+          onClick={() =>
+            editor.chain().focus().insertContent({ type: "embed", attrs: {} }).run()
+          }
+        >
+          <Video size={15} />
+        </ToolbarButton>
         <span className="mx-1 h-5 w-px bg-line" />
         <ToolbarButton
           title="Undo"
