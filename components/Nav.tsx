@@ -5,10 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
-import { navLinks } from "@/lib/data";
+import type { NavLink } from "@/lib/data";
 import ThemeToggle from "@/components/ThemeToggle";
 
-export default function Nav() {
+export default function Nav({ items }: { items: NavLink[] }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -45,18 +45,22 @@ export default function Nav() {
         <div className="flex items-center gap-2">
           {/* Desktop */}
           <ul className="hidden lg:flex items-center gap-1">
-            {navLinks.map((link) => {
-              const active = pathname === link.href;
+            {items.map((link, i) => {
+              const active = !link.external && pathname === link.href;
+              const cls = `px-3 py-2 text-sm transition-colors ${
+                active ? "text-accent" : "text-ink-soft hover:text-ink"
+              }`;
               return (
-                <li key={link.href} className="relative">
-                  <Link
-                    href={link.href}
-                    className={`px-3 py-2 text-sm transition-colors ${
-                      active ? "text-accent" : "text-ink-soft hover:text-ink"
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
+                <li key={`${link.href}-${i}`} className="relative">
+                  {link.external ? (
+                    <a href={link.href} target="_blank" rel="noopener noreferrer" className={cls}>
+                      {link.label}
+                    </a>
+                  ) : (
+                    <Link href={link.href} className={cls}>
+                      {link.label}
+                    </Link>
+                  )}
                   {active && (
                     <motion.span
                       layoutId="nav-underline"
@@ -94,25 +98,30 @@ export default function Nav() {
             className="lg:hidden overflow-hidden bg-paper/95 backdrop-blur-md border-b border-line"
           >
             <ul className="px-5 pb-4 pt-1">
-              {navLinks.map((link, i) => (
-                <motion.li
-                  key={link.href}
-                  initial={{ opacity: 0, x: -12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.04 * i, duration: 0.25 }}
-                >
-                  <Link
-                    href={link.href}
-                    className={`block py-2.5 text-base border-b border-line/60 last:border-0 ${
-                      pathname === link.href
-                        ? "text-accent font-medium"
-                        : "text-ink-soft"
-                    }`}
+              {items.map((link, i) => {
+                const active = !link.external && pathname === link.href;
+                const cls = `block py-2.5 text-base border-b border-line/60 last:border-0 ${
+                  active ? "text-accent font-medium" : "text-ink-soft"
+                }`;
+                return (
+                  <motion.li
+                    key={`${link.href}-${i}`}
+                    initial={{ opacity: 0, x: -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.04 * i, duration: 0.25 }}
                   >
-                    {link.label}
-                  </Link>
-                </motion.li>
-              ))}
+                    {link.external ? (
+                      <a href={link.href} target="_blank" rel="noopener noreferrer" className={cls}>
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link href={link.href} className={cls}>
+                        {link.label}
+                      </Link>
+                    )}
+                  </motion.li>
+                );
+              })}
             </ul>
           </motion.div>
         )}

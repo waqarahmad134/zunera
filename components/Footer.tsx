@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Mail } from "lucide-react";
 import { XIcon, LinkedInIcon } from "@/components/icons";
-import { navLinks, type Site } from "@/lib/data";
+import type { NavLink, Site } from "@/lib/data";
 
-export default function Footer({ site }: { site: Site }) {
+export default function Footer({ site, nav }: { site: Site; nav: NavLink[] }) {
   const pathname = usePathname();
   if (pathname.startsWith("/admin")) return null;
 
@@ -22,14 +22,25 @@ export default function Footer({ site }: { site: Site }) {
         <nav className="text-sm">
           <p className="font-medium mb-3 text-ink">Explore</p>
           <ul className="grid grid-cols-2 gap-y-2 gap-x-4">
-            {navLinks.map((l) => (
-              <li key={l.href}>
-                <Link
-                  href={l.href}
-                  className="text-ink-soft hover:text-accent transition-colors"
-                >
-                  {l.label}
-                </Link>
+            {nav.map((l, i) => (
+              <li key={`${l.href}-${i}`}>
+                {l.external ? (
+                  <a
+                    href={l.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-ink-soft hover:text-accent transition-colors"
+                  >
+                    {l.label}
+                  </a>
+                ) : (
+                  <Link
+                    href={l.href}
+                    className="text-ink-soft hover:text-accent transition-colors"
+                  >
+                    {l.label}
+                  </Link>
+                )}
               </li>
             ))}
           </ul>

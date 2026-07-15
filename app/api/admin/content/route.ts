@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSection } from "@/lib/adminConfig";
 import { readSection, readSingleton, writeSection } from "@/lib/db";
+import { DEFAULT_NAV } from "@/lib/data";
 
 // Content is stored in Cloudflare D1. Reads/writes go straight to the database
 // in every environment (local dev uses the Miniflare D1 simulator), so there is
@@ -18,6 +19,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ data });
     }
     const data = await readSection(section);
+    // The live menu falls back to the default when the nav section is empty
+    // (e.g. before it has been seeded). Mirror that in the admin so the table
+    // shows the same items the site is currently using, ready to edit.
+    if (section === "nav" && data.length === 0) {
+      return NextResponse.json({ data: DEFAULT_NAV });
+    }
     return NextResponse.json({ data });
   } catch (e) {
     return NextResponse.json(

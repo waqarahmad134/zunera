@@ -32,7 +32,8 @@ function CellValue({
     );
   }
   if (field.type === "select") {
-    const label = options.find((o) => o.value === value)?.label;
+    const opts = field.options ?? options;
+    const label = opts.find((o) => o.value === value)?.label;
     return <span>{label ?? String(value ?? "—")}</span>;
   }
   if (field.type === "checkbox") {

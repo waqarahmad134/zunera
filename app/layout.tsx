@@ -3,7 +3,7 @@ import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import { getSeo, getSite } from "@/lib/content";
+import { getNav, getSeo, getSite } from "@/lib/content";
 import { siteUrl } from "@/lib/seo";
 
 // Content is read from D1 per request, so the whole app renders dynamically.
@@ -60,7 +60,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const site = await getSite();
+  const [site, nav] = await Promise.all([getSite(), getNav()]);
   return (
     <html
       lang="en"
@@ -81,9 +81,9 @@ export default async function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col">
-        <Nav />
+        <Nav items={nav} />
         <main className="flex-1">{children}</main>
-        <Footer site={site} />
+        <Footer site={site} nav={nav} />
       </body>
     </html>
   );

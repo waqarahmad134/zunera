@@ -1,0 +1,11 @@
+[
+  { "label": "Books", "kind": "page", "page": "/books", "url": "" },
+  { "label": "Papers", "kind": "page", "page": "/papers", "url": "" },
+  { "label": "Chapters", "kind": "page", "page": "/chapters", "url": "" },
+  { "label": "In Progress", "kind": "page", "page": "/in-progress", "url": "" },
+  { "label": "Commentary", "kind": "page", "page": "/commentary", "url": "" },
+  { "label": "Policy", "kind": "page", "page": "/policy", "url": "" },
+  { "label": "Blog", "kind": "page", "page": "/blog", "url": "" },
+  { "label": "CV", "kind": "page", "page": "/cv", "url": "" },
+  { "label": "Contact", "kind": "page", "page": "/contact", "url": "" }
+]

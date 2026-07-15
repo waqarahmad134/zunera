@@ -5,6 +5,7 @@
 // and is fetched per request (pages that use these are rendered dynamically).
 import "server-only";
 import { readSection, readSingleton } from "./db";
+import { DEFAULT_NAV, resolveNavItem } from "./data";
 import type {
   Affiliation,
   Book,
@@ -12,6 +13,8 @@ import type {
   Chapter,
   InProgress,
   Interview,
+  NavItem,
+  NavLink,
   Opinion,
   PagesMap,
   Paper,
@@ -74,6 +77,15 @@ export async function getSeo(): Promise<Seo> {
 
 export async function getPages(): Promise<PagesMap> {
   return readSingleton<PagesMap>("pages", {});
+}
+
+/** The main menu, in order. Falls back to the default menu before seeding. */
+export async function getNav(): Promise<NavLink[]> {
+  const items = await readSection<NavItem>("nav");
+  const source = items.length ? items : DEFAULT_NAV;
+  return source
+    .map(resolveNavItem)
+    .filter((l): l is NavLink => l !== null);
 }
 
 export async function isComingSoon(slug: string): Promise<boolean> {

@@ -16,6 +16,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 // Singleton sections store one object; collections store an ordered array.
 const SINGLETONS = ["site", "pages", "seo"];
 const COLLECTIONS = [
+  "nav",
   "affiliations",
   "books",
   "papers",

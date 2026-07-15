@@ -2,8 +2,9 @@
 //
 // This module must stay free of any server-only imports (D1, R2, the
 // Cloudflare context) because client components such as Nav and Footer import
-// `navLinks` from here. The actual data fetching lives in lib/content.ts and is
-// server-only. Types are erased at build time, so sharing them is safe.
+// types and constants from here. The actual data fetching lives in
+// lib/content.ts and is server-only. Types are erased at build time, so
+// sharing them is safe.
 
 export interface Affiliation {
   label: string;
@@ -120,14 +121,57 @@ export interface Post {
   published: boolean;
 }
 
-export const navLinks = [
-  { href: "/books", label: "Books" },
-  { href: "/papers", label: "Papers" },
-  { href: "/chapters", label: "Chapters" },
-  { href: "/in-progress", label: "In Progress" },
-  { href: "/commentary", label: "Commentary" },
-  { href: "/policy", label: "Policy" },
-  { href: "/blog", label: "Blog" },
-  { href: "/cv", label: "CV" },
-  { href: "/contact", label: "Contact" },
+// Known internal destinations a menu item can link to. Every page stays
+// available to connect to here even if it is removed from the live menu.
+export const SITE_PAGES: { label: string; path: string }[] = [
+  { label: "Home", path: "/" },
+  { label: "Books", path: "/books" },
+  { label: "Papers", path: "/papers" },
+  { label: "Book Chapters", path: "/chapters" },
+  { label: "In Progress", path: "/in-progress" },
+  { label: "Commentary", path: "/commentary" },
+  { label: "Policy", path: "/policy" },
+  { label: "Blog", path: "/blog" },
+  { label: "CV", path: "/cv" },
+  { label: "Contact", path: "/contact" },
 ];
+
+/** A single menu entry as stored in the `nav` section. */
+export interface NavItem {
+  label: string;
+  /** "page" links to an internal SITE_PAGES path; "custom" links to any URL. */
+  kind: "page" | "custom";
+  page: string;
+  url: string;
+}
+
+/** A resolved menu entry consumed by the Nav/Footer UI. */
+export interface NavLink {
+  label: string;
+  href: string;
+  external: boolean;
+}
+
+/** Default menu, used to seed the DB and as a fallback before it is seeded. */
+export const DEFAULT_NAV: NavItem[] = [
+  { label: "Books", kind: "page", page: "/books", url: "" },
+  { label: "Papers", kind: "page", page: "/papers", url: "" },
+  { label: "Chapters", kind: "page", page: "/chapters", url: "" },
+  { label: "In Progress", kind: "page", page: "/in-progress", url: "" },
+  { label: "Commentary", kind: "page", page: "/commentary", url: "" },
+  { label: "Policy", kind: "page", page: "/policy", url: "" },
+  { label: "Blog", kind: "page", page: "/blog", url: "" },
+  { label: "CV", kind: "page", page: "/cv", url: "" },
+  { label: "Contact", kind: "page", page: "/contact", url: "" },
+];
+
+/** Resolve a stored nav item into a usable link. */
+export function resolveNavItem(item: NavItem): NavLink | null {
+  const href = item.kind === "custom" ? item.url : item.page;
+  if (!item.label || !href) return null;
+  return {
+    label: item.label,
+    href,
+    external: item.kind === "custom" && /^https?:\/\//i.test(href),
+  };
+}

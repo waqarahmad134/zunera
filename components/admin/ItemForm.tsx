@@ -169,6 +169,9 @@ function FieldInput({
     );
   }
   if (field.type === "select") {
+    // Static options defined on the field take precedence over options loaded
+    // from another section (optionsFrom).
+    const opts = field.options ?? options;
     return (
       <select
         value={String(value ?? "")}
@@ -176,7 +179,7 @@ function FieldInput({
         className={base}
       >
         <option value="">Select...</option>
-        {options.map((o) => (
+        {opts.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}
           </option>

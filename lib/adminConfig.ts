@@ -1,3 +1,5 @@
+import { SITE_PAGES } from "./data";
+
 export type FieldType =
   | "text"
   | "textarea"
@@ -20,6 +22,8 @@ export interface Field {
   /** Field of the option items used as value / label. */
   optionValue?: string;
   optionLabel?: string;
+  /** For selects with a fixed set of choices (instead of optionsFrom). */
+  options?: { value: string; label: string }[];
   placeholder?: string;
   help?: string;
   /** Custom label shown next to a checkbox (overrides the default visible/hidden text). */
@@ -131,6 +135,41 @@ export const SECTIONS: SectionDef[] = [
         label: "Google verification code",
         type: "text",
         help: "Optional. The content value from Google Search Console's HTML tag verification.",
+      },
+    ],
+  },
+  {
+    slug: "nav",
+    label: "Navigation Menu",
+    description:
+      "The main site menu. Reorder with the arrows; link each item to a page on the site or a custom URL.",
+    itemTitleKey: "label",
+    columns: ["label", "kind", "page", "url"],
+    fields: [
+      { key: "label", label: "Menu label", type: "text" },
+      {
+        key: "kind",
+        label: "Links to",
+        type: "select",
+        options: [
+          { value: "page", label: "A page on this site" },
+          { value: "custom", label: "A custom URL" },
+        ],
+        help: "Pick where this menu item goes.",
+      },
+      {
+        key: "page",
+        label: "Site page",
+        type: "select",
+        options: SITE_PAGES.map((p) => ({ value: p.path, label: p.label })),
+        help: "Used when \"Links to\" is set to a page on this site.",
+      },
+      {
+        key: "url",
+        label: "Custom URL",
+        type: "url",
+        placeholder: "https://example.com",
+        help: "Used when \"Links to\" is set to a custom URL. External links open in a new tab.",
       },
     ],
   },
