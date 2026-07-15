@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Check, Loader2, Save, Search, Trash2, TriangleAlert, User, X } from "lucide-react";
+import { Check, Loader2, Save, Trash2, TriangleAlert } from "lucide-react";
 import AdminShell from "@/components/AdminShell";
+import CustomerPicker from "@/components/CustomerPicker";
 import { useDialogs } from "@/components/ConfirmProvider";
 import type { Customer } from "@/lib/types/customers";
 import { formatCurrency, formatDate } from "@/lib/types/orders";
@@ -25,142 +26,6 @@ interface FormValue {
 }
 
 const EMPTY: FormValue = { customer: null, amount: "", date: today(), method: "cash", note: "" };
-
-/**
- * Lightweight inline customer search-and-select — a simplified stand-in for
- * the full `CustomerPicker` component (not yet ported), scoped down to just
- * search + select since that's all Payment In needs.
- */
-function InlineCustomerPicker({
-  value,
-  onSelect,
-}: {
-  value: Customer | null;
-  onSelect: (customer: Customer) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Customer[] | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    let cancelled = false;
-    const handle = setTimeout(() => {
-      api
-        .get<{ customers: Customer[] }>(`/admin/customers?search=${encodeURIComponent(query)}`)
-        .then((d) => {
-          if (!cancelled) setResults(d.customers);
-        })
-        .catch(() => {
-          if (!cancelled) setResults([]);
-        });
-    }, 200);
-    return () => {
-      cancelled = true;
-      clearTimeout(handle);
-    };
-  }, [query, open]);
-
-  useEffect(() => {
-    if (!open) return;
-    function onClickOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
-  }, [open]);
-
-  if (value && !open) {
-    return (
-      <div className="flex items-start gap-3 rounded-xl border border-line bg-white px-3.5 py-2.5">
-        <span className="mt-0.5 rounded-full bg-accent-soft p-1.5 text-accent shrink-0">
-          <User size={14} />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium truncate">{value.name}</p>
-          <p className="text-xs text-ink-soft truncate">
-            {value.phone ? `${value.phone} · ` : ""}
-            {value.address}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => {
-            setOpen(true);
-            setQuery("");
-          }}
-          className="shrink-0 text-xs font-medium text-accent hover:text-accent-deep transition-colors"
-        >
-          Change
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div ref={containerRef} className="relative">
-      <div className="relative">
-        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/60" />
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => setOpen(true)}
-          placeholder="Search customers by name, phone or address..."
-          className={`${inputClass} pl-9`}
-        />
-        {value && (
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-soft hover:text-ink transition-colors"
-          >
-            <X size={15} />
-          </button>
-        )}
-      </div>
-
-      {open && (
-        <div className="absolute z-20 mt-1.5 w-full rounded-xl border border-line bg-white p-2 shadow-[0_8px_30px_rgba(11,11,11,0.10)]">
-          <div className="max-h-56 overflow-y-auto">
-            {results === null ? (
-              <div className="flex items-center gap-2 p-3 text-xs text-ink-soft">
-                <Loader2 size={13} className="animate-spin" /> Searching...
-              </div>
-            ) : results.length === 0 ? (
-              <p className="p-3 text-xs text-ink-soft">No customers found.</p>
-            ) : (
-              results.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => {
-                    onSelect(c);
-                    setOpen(false);
-                  }}
-                  className="flex w-full items-start gap-2.5 rounded-lg p-2 text-left hover:bg-paper-soft transition-colors"
-                >
-                  <span className="mt-0.5 rounded-full bg-accent-soft p-1.5 text-accent shrink-0">
-                    <User size={13} />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-sm font-medium truncate">{c.name}</span>
-                    <span className="block text-xs text-ink-soft truncate">
-                      {c.phone ? `${c.phone} · ` : ""}
-                      {c.address}
-                    </span>
-                  </span>
-                </button>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 export default function PaymentsPage() {
   const [searchParams] = useSearchParams();
@@ -281,7 +146,7 @@ export default function PaymentsPage() {
         <div className="grid grid-cols-1 gap-4">
           <div>
             <label className={labelClass}>Customer</label>
-            <InlineCustomerPicker value={form.customer} onSelect={(customer) => setForm({ ...form, customer })} />
+            <CustomerPicker value={form.customer} onSelect={(customer) => setForm({ ...form, customer })} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
