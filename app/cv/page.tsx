@@ -1,16 +1,44 @@
 import type { Metadata } from "next";
 import { Mail } from "lucide-react";
-import { getSite } from "@/lib/content";
+import { getCustomPage, getSite } from "@/lib/content";
 import PageHeader from "@/components/PageHeader";
-import { Reveal } from "@/components/motion";
+import { HeroText, Reveal } from "@/components/motion";
 
-export const metadata: Metadata = {
-  alternates: { canonical: "/cv" },
-  title: "CV",
-  description: "Curriculum vitae of Zunera, available upon request.",
-};
+export const dynamic = "force-dynamic";
+
+// /cv is managed from the admin: create a Page with the slug "cv" and it renders
+// here. Until one exists, the "available on request" fallback below is shown, so
+// the route and the nav link never break.
+
+export async function generateMetadata(): Promise<Metadata> {
+  const page = await getCustomPage("cv");
+  return {
+    title: page?.title || "CV",
+    description: page?.metaDescription || "Curriculum vitae of Zunera.",
+    alternates: { canonical: "/cv" },
+  };
+}
 
 export default async function CVPage() {
+  const page = await getCustomPage("cv");
+
+  if (page) {
+    return (
+      <>
+        <PageHeader title={page.title || "CV"} />
+        <section className="mx-auto max-w-6xl px-5 sm:px-8 pb-8">
+          <HeroText delay={0.1}>
+            <div
+              className="prose-z max-w-3xl"
+              dangerouslySetInnerHTML={{ __html: page.content }}
+            />
+          </HeroText>
+        </section>
+      </>
+    );
+  }
+
+  // Fallback: no CV page has been created yet.
   const site = await getSite();
   return (
     <>

@@ -211,7 +211,7 @@ export const SECTIONS: SectionDef[] = [
         key: "slug",
         label: "Slug (in the URL)",
         type: "slug",
-        help: "The page will live at /your-slug. Avoid names already used by the site (books, papers, blog, policy, cv, contact, chapters, commentary, in-progress).",
+        help: "The page will live at /your-slug. Use \"cv\" to fill the CV page. Avoid other names already used by the site (books, papers, blog, policy, contact, chapters, commentary, in-progress).",
       },
       {
         key: "content",
