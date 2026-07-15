@@ -92,7 +92,6 @@ export const SECTIONS: SectionDef[] = [
     itemTitleKey: "blog",
     fields: [
       { key: "blog", label: "Blog", type: "checkbox", checkboxLabel: "Show \"Coming soon\" instead of the Blog page" },
-      { key: "books", label: "Books", type: "checkbox", checkboxLabel: "Show \"Coming soon\" instead of the Books page" },
       { key: "papers", label: "Papers", type: "checkbox", checkboxLabel: "Show \"Coming soon\" instead of the Papers page" },
       { key: "chapters", label: "Book Chapters", type: "checkbox", checkboxLabel: "Show \"Coming soon\" instead of the Chapters page" },
       { key: "in-progress", label: "In Progress", type: "checkbox", checkboxLabel: "Show \"Coming soon\" instead of the In Progress page" },
@@ -211,7 +210,7 @@ export const SECTIONS: SectionDef[] = [
         key: "slug",
         label: "Slug (in the URL)",
         type: "slug",
-        help: "The page will live at /your-slug. Use \"cv\" to fill the CV page. Avoid other names already used by the site (books, papers, blog, policy, contact, chapters, commentary, in-progress).",
+        help: "The page will live at /your-slug. Use \"cv\" to fill the CV page, or \"books\" for your books page. Avoid other names already used by the site (papers, blog, policy, contact, chapters, commentary, in-progress).",
       },
       {
         key: "content",
@@ -238,26 +237,6 @@ export const SECTIONS: SectionDef[] = [
       { key: "label", label: "Organisation", type: "text" },
       { key: "detail", label: "Your role there", type: "text" },
       { key: "href", label: "Link", type: "url" },
-    ],
-  },
-  {
-    slug: "books",
-    label: "Books",
-    description: "Authored and edited books.",
-    itemTitleKey: "title",
-    columns: ["title", "year", "publisher", "role"],
-    fields: [
-      { key: "title", label: "Title", type: "text" },
-      { key: "year", label: "Year", type: "number" },
-      { key: "publisher", label: "Publisher", type: "text" },
-      { key: "role", label: "Role (e.g. Author)", type: "text" },
-      { key: "href", label: "Link", type: "url" },
-      {
-        key: "description",
-        label: "Description",
-        type: "richtext",
-        help: "Use the toolbar for bold, italics, links and lists.",
-      },
     ],
   },
   {

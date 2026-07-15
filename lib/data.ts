@@ -50,15 +50,6 @@ export interface Seo {
 
 export type PagesMap = Record<string, boolean>;
 
-export interface Book {
-  title: string;
-  year: number;
-  publisher: string;
-  role: string;
-  href: string;
-  description: string;
-}
-
 export interface Paper {
   year: number;
   title: string;
@@ -125,7 +116,6 @@ export interface Post {
 // available to connect to here even if it is removed from the live menu.
 export const SITE_PAGES: { label: string; path: string }[] = [
   { label: "Home", path: "/" },
-  { label: "Books", path: "/books" },
   { label: "Papers", path: "/papers" },
   { label: "Book Chapters", path: "/chapters" },
   { label: "In Progress", path: "/in-progress" },
@@ -148,7 +138,7 @@ export interface CustomPage {
 // Slugs that already belong to built-in routes; a custom page must not use
 // these (the built-in route would shadow it).
 export const RESERVED_SLUGS = [
-  "", "admin", "api", "uploads", "books", "papers", "chapters",
+  "", "admin", "api", "uploads", "papers", "chapters",
   "in-progress", "commentary", "policy", "blog", "cv", "contact",
   "sitemap.xml", "robots.txt", "llms.txt", "icon.svg", "favicon.ico",
 ];
@@ -178,7 +168,6 @@ export interface NavLink {
 
 /** Default menu, used to seed the DB and as a fallback before it is seeded. */
 export const DEFAULT_NAV: NavItem[] = [
-  { label: "Books", kind: "page", page: "/books", url: "" },
   { label: "Papers", kind: "page", page: "/papers", url: "" },
   { label: "Chapters", kind: "page", page: "/chapters", url: "" },
   { label: "In Progress", kind: "page", page: "/in-progress", url: "" },

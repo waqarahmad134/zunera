@@ -19,7 +19,6 @@ const COLLECTIONS = [
   "nav",
   "custom-pages",
   "affiliations",
-  "books",
   "papers",
   "chapters",
   "in-progress",

@@ -1,5 +1,5 @@
 import {
-  getSite, getBooks, getPapers, getChapters, getInProgress, getOpinions,
+  getSite, getPapers, getChapters, getInProgress, getOpinions,
   getInterviews, getPolicy, getPosts, getCategories,
 } from "@/lib/content";
 import { siteUrl } from "@/lib/seo";
@@ -10,10 +10,10 @@ export async function GET() {
   const base = siteUrl();
 
   const [
-    site, books, papers, chapters, inProgress, opinions, interviews,
+    site, papers, chapters, inProgress, opinions, interviews,
     policy, posts, categories,
   ] = await Promise.all([
-    getSite(), getBooks(), getPapers(), getChapters(), getInProgress(),
+    getSite(), getPapers(), getChapters(), getInProgress(),
     getOpinions(), getInterviews(), getPolicy(), getPosts(), getCategories(),
   ]);
 
@@ -31,8 +31,7 @@ export async function GET() {
     "",
     "## Pages",
     "",
-    `- [Home](${base}/): Profile, featured book and recent work`,
-    `- [Books](${base}/books): Authored and edited books`,
+    `- [Home](${base}/): Profile and recent work`,
     `- [Papers](${base}/papers): Peer-reviewed journal articles`,
     `- [Book Chapters](${base}/chapters): Chapters in edited volumes`,
     `- [In Progress](${base}/in-progress): Ongoing research projects`,
@@ -40,12 +39,6 @@ export async function GET() {
     `- [Policy](${base}/policy): Policy reports and briefs`,
     `- [Blog](${base}/blog): Notes and reflections`,
     `- [Contact](${base}/contact): Email and social profiles`,
-    "",
-    "## Books",
-    "",
-    ...books.map(
-      (b) => `- ${b.title} (${b.publisher}, ${b.year}): ${b.href}`
-    ),
     "",
     "## Peer-reviewed Papers",
     "",

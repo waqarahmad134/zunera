@@ -8,7 +8,6 @@ import { readSection, readSingleton } from "./db";
 import { DEFAULT_NAV, resolveNavItem } from "./data";
 import type {
   Affiliation,
-  Book,
   Category,
   Chapter,
   CustomPage,
@@ -103,10 +102,6 @@ export async function getNav(): Promise<NavLink[]> {
 export async function isComingSoon(slug: string): Promise<boolean> {
   const pages = await getPages();
   return Boolean(pages[slug]);
-}
-
-export async function getBooks(): Promise<Book[]> {
-  return readSection<Book>("books");
 }
 
 export async function getPapers(): Promise<Paper[]> {

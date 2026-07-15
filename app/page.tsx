@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, ArrowUpRight, BookOpen, FileText, Newspaper, Landmark } from "lucide-react";
+import { ArrowRight, ArrowUpRight, FileText, Newspaper, Landmark } from "lucide-react";
 import {
-  getSite, getBooks, getPapers, getOpinions, getInterviews, getPolicy, getChapters,
+  getSite, getPapers, getOpinions, getInterviews, getPolicy, getChapters,
 } from "@/lib/content";
 import { HeroText, Reveal, StaggerList, StaggerItem } from "@/components/motion";
 import { siteUrl } from "@/lib/seo";
@@ -13,10 +13,9 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const [site, books, papers, opinions, interviews, policy, chapters] =
+  const [site, papers, opinions, interviews, policy, chapters] =
     await Promise.all([
       getSite(),
-      getBooks(),
       getPapers(),
       getOpinions(),
       getInterviews(),
@@ -41,7 +40,6 @@ export default async function Home() {
   };
 
   const stats = [
-    { label: "Books", value: books.length, href: "/books", icon: BookOpen },
     { label: "Peer-reviewed papers", value: papers.length, href: "/papers", icon: FileText },
     { label: "Commentary & media", value: opinions.length + interviews.length, href: "/commentary", icon: Newspaper },
     { label: "Policy publications", value: policy.length, href: "/policy", icon: Landmark },
@@ -80,7 +78,7 @@ export default async function Home() {
             <HeroText delay={0.3}>
               <div className="mt-9 flex flex-wrap items-center gap-4">
                 <Link
-                  href="/books"
+                  href="/papers"
                   className="inline-flex items-center gap-2 rounded-full bg-ink text-paper px-6 py-3 text-sm font-medium transition-all duration-300 hover:bg-accent hover:gap-3"
                 >
                   Explore my research <ArrowRight size={16} />
@@ -132,7 +130,7 @@ export default async function Home() {
 
       {/* Stats */}
       <section className="mx-auto max-w-6xl px-5 sm:px-8">
-        <StaggerList className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StaggerList className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {stats.map((s) => (
             <StaggerItem key={s.label}>
               <Link
@@ -149,53 +147,6 @@ export default async function Home() {
           ))}
         </StaggerList>
       </section>
-
-      {/* Featured book */}
-      {books[0] && (
-      <section className="mx-auto max-w-6xl px-5 sm:px-8 mt-24">
-        <Reveal>
-          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-accent">
-            Featured book
-          </p>
-        </Reveal>
-        <div className="mt-6 rounded-3xl border border-line bg-paper-soft/70 p-8 sm:p-12">
-          <Reveal delay={0.05}>
-            <h2 className="font-serif text-3xl sm:text-4xl leading-tight max-w-2xl">
-              {books[0].title}
-            </h2>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <p className="mt-3 text-sm text-accent font-medium">
-              {books[0].publisher} · {books[0].year}
-            </p>
-          </Reveal>
-          <Reveal delay={0.15}>
-            <div
-              className="rich mt-5 text-ink-soft leading-relaxed max-w-2xl"
-              dangerouslySetInnerHTML={{ __html: books[0].description }}
-            />
-          </Reveal>
-          <Reveal delay={0.2}>
-            <div className="mt-7 flex flex-wrap gap-4">
-              <a
-                href={books[0].href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-accent text-paper px-6 py-3 text-sm font-medium transition-all duration-300 hover:bg-accent-deep hover:gap-3"
-              >
-                View the book <ArrowUpRight size={16} />
-              </a>
-              <Link
-                href="/books"
-                className="inline-flex items-center gap-2 px-2 py-3 text-sm font-medium text-ink-soft hover:text-accent transition-colors"
-              >
-                All book projects <ArrowRight size={16} />
-              </Link>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-      )}
 
       {/* Recent work */}
       <section className="mx-auto max-w-6xl px-5 sm:px-8 mt-24">
