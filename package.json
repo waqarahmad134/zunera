@@ -23,6 +23,7 @@
   "dependencies": {
     "@opennextjs/cloudflare": "^1.3.0",
     "@tiptap/extension-image": "^3.26.1",
+    "@tiptap/extension-table": "^3.26.1",
     "@tiptap/pm": "^3.26.1",
     "@tiptap/react": "^3.26.1",
     "@tiptap/starter-kit": "^3.26.1",
@@ -44,5 +45,9 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "wrangler": "^4.20.0"
+  },
+  "allowScripts": {
+    "esbuild@0.25.4": true,
+    "esbuild@0.28.1": true
   }
 }

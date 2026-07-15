@@ -320,3 +320,63 @@ a.pub-card--compact::after {
   height: 100%;
   border: 0;
 }
+
+/* Side-by-side columns: stack on mobile, grid on wider screens. */
+.cols {
+  display: grid;
+  gap: 1.25rem;
+  margin: 1.25rem 0;
+}
+.col {
+  min-width: 0;
+}
+.col > :first-child {
+  margin-top: 0;
+}
+.col > :last-child {
+  margin-bottom: 0;
+}
+@media (min-width: 640px) {
+  .cols-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+  .cols-3 {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+/* Tables */
+.prose-z table,
+.rich table {
+  width: 100%;
+  margin: 1.25rem 0;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  overflow: hidden;
+}
+.prose-z th,
+.prose-z td,
+.rich th,
+.rich td {
+  border: 1px solid var(--color-line);
+  padding: 0.6rem 0.85rem;
+  text-align: left;
+  vertical-align: top;
+}
+.prose-z th,
+.rich th {
+  background: var(--color-paper-soft);
+  font-weight: 600;
+  color: var(--color-ink);
+}
+/* Editor: make cells clearly editable + show selection. */
+.tiptap table {
+  table-layout: fixed;
+}
+.tiptap .selectedCell {
+  background: var(--color-accent-soft);
+}
+.tiptap .column-resize-handle {
+  background: var(--color-accent);
+  width: 3px;
+}

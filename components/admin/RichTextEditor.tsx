@@ -4,10 +4,11 @@ import { useRef, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
+import { TableKit } from "@tiptap/extension-table";
 import {
   Bold, Italic, Underline as UnderlineIcon, Heading2, Heading3, List,
   ListOrdered, Quote, Link2, Link2Off, ImagePlus, Undo2, Redo2, Loader2,
-  CreditCard, Video,
+  CreditCard, Video, Columns3, Table as TableIcon,
 } from "lucide-react";
 import {
   ACCEPTED_IMAGE_TYPES,
@@ -16,6 +17,7 @@ import {
 } from "@/lib/clientImages";
 import { PubCard, CARD_VARIANTS } from "@/components/admin/PubCardNode";
 import { Embed } from "@/components/admin/EmbedNode";
+import { Columns, Column, makeColumns } from "@/components/admin/LayoutNodes";
 
 function ToolbarButton({
   onClick,
@@ -59,6 +61,8 @@ export default function RichTextEditor({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [cardMenu, setCardMenu] = useState(false);
+  const [colMenu, setColMenu] = useState(false);
+  const [tableMenu, setTableMenu] = useState(false);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -70,6 +74,9 @@ export default function RichTextEditor({
       Image,
       PubCard,
       Embed,
+      Columns,
+      Column,
+      TableKit.configure({ table: { resizable: true } }),
     ],
     content: value || "<p></p>",
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
@@ -244,6 +251,77 @@ export default function RichTextEditor({
         >
           <Video size={15} />
         </ToolbarButton>
+
+        {/* Columns (side by side) */}
+        <div className="relative">
+          <ToolbarButton
+            title="Side-by-side columns"
+            active={colMenu}
+            onClick={() => setColMenu((o) => !o)}
+          >
+            <Columns3 size={15} />
+          </ToolbarButton>
+          {colMenu && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setColMenu(false)} />
+              <div className="absolute left-0 top-full z-20 mt-1 w-44 rounded-xl border border-line bg-white p-1 shadow-[0_8px_30px_rgba(33,31,26,0.12)]">
+                {[2, 3].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      editor.chain().focus().insertContent(makeColumns(n)).run();
+                      setColMenu(false);
+                    }}
+                    className="block w-full rounded-lg px-3 py-2 text-left text-sm text-ink-soft hover:bg-paper-soft hover:text-ink transition-colors"
+                  >
+                    {n} columns
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Table */}
+        <div className="relative">
+          <ToolbarButton
+            title="Table"
+            active={tableMenu}
+            onClick={() => setTableMenu((o) => !o)}
+          >
+            <TableIcon size={15} />
+          </ToolbarButton>
+          {tableMenu && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setTableMenu(false)} />
+              <div className="absolute left-0 top-full z-20 mt-1 w-48 rounded-xl border border-line bg-white p-1 shadow-[0_8px_30px_rgba(33,31,26,0.12)]">
+                {[
+                  { label: "Insert table (3×3)", run: () => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run() },
+                  { label: "Add row", run: () => editor.chain().focus().addRowAfter().run() },
+                  { label: "Add column", run: () => editor.chain().focus().addColumnAfter().run() },
+                  { label: "Delete row", run: () => editor.chain().focus().deleteRow().run() },
+                  { label: "Delete column", run: () => editor.chain().focus().deleteColumn().run() },
+                  { label: "Delete table", run: () => editor.chain().focus().deleteTable().run() },
+                ].map((item) => (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      item.run();
+                      setTableMenu(false);
+                    }}
+                    className="block w-full rounded-lg px-3 py-2 text-left text-sm text-ink-soft hover:bg-paper-soft hover:text-ink transition-colors"
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
         <span className="mx-1 h-5 w-px bg-line" />
         <ToolbarButton
           title="Undo"
