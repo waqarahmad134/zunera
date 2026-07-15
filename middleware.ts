@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ADMIN_COOKIE, adminToken } from "@/lib/auth";
 
+// NOTE: kept as `middleware.ts` (not the newer `proxy.ts`) on purpose. Next.js
+// runs proxy on the Node.js runtime, which the Cloudflare adapter (OpenNext)
+// does not support — it requires Edge middleware. The "middleware is
+// deprecated" build notice is expected and harmless here.
+
 const PUBLIC_PATHS = ["/admin/login", "/api/admin/login"];
 
-export async function proxy(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
     return NextResponse.next();

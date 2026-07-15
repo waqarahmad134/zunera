@@ -136,12 +136,34 @@ export const SITE_PAGES: { label: string; path: string }[] = [
   { label: "Contact", path: "/contact" },
 ];
 
+/** A standalone page (About, Privacy Policy, Terms, …) created in the admin. */
+export interface CustomPage {
+  title: string;
+  slug: string;
+  content: string;
+  metaDescription: string;
+  published: boolean;
+}
+
+// Slugs that already belong to built-in routes; a custom page must not use
+// these (the built-in route would shadow it).
+export const RESERVED_SLUGS = [
+  "", "admin", "api", "uploads", "books", "papers", "chapters",
+  "in-progress", "commentary", "policy", "blog", "cv", "contact",
+  "sitemap.xml", "robots.txt", "llms.txt", "icon.svg", "favicon.ico",
+];
+
 /** A single menu entry as stored in the `nav` section. */
 export interface NavItem {
   label: string;
-  /** "page" links to an internal SITE_PAGES path; "custom" links to any URL. */
-  kind: "page" | "custom";
+  /**
+   * "page" links to a built-in SITE_PAGES path; "custom-page" links to a
+   * custom page by slug; "custom" links to any URL.
+   */
+  kind: "page" | "custom-page" | "custom";
   page: string;
+  /** Slug of a custom page, when kind === "custom-page". */
+  pageSlug?: string;
   url: string;
 }
 
@@ -167,11 +189,16 @@ export const DEFAULT_NAV: NavItem[] = [
 
 /** Resolve a stored nav item into a usable link. */
 export function resolveNavItem(item: NavItem): NavLink | null {
-  const href = item.kind === "custom" ? item.url : item.page;
+  let href = "";
+  let external = false;
+  if (item.kind === "custom") {
+    href = item.url;
+    external = /^https?:\/\//i.test(href);
+  } else if (item.kind === "custom-page") {
+    href = item.pageSlug ? `/${item.pageSlug}` : "";
+  } else {
+    href = item.page;
+  }
   if (!item.label || !href) return null;
-  return {
-    label: item.label,
-    href,
-    external: item.kind === "custom" && /^https?:\/\//i.test(href),
-  };
+  return { label: item.label, href, external };
 }

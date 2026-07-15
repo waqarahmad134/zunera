@@ -1,12 +1,16 @@
 import type { MetadataRoute } from "next";
-import { getPages, getPosts } from "@/lib/content";
+import { getCustomPages, getPages, getPosts } from "@/lib/content";
 import { siteUrl } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteUrl();
-  const [pages, posts] = await Promise.all([getPages(), getPosts()]);
+  const [pages, posts, customPages] = await Promise.all([
+    getPages(),
+    getPosts(),
+    getCustomPages(),
+  ]);
   const comingSoon = (slug: string) => Boolean(pages[slug]);
 
   // Routes tied to a toggleable section; excluded while "Coming soon".
@@ -36,5 +40,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.7,
       }));
 
-  return [...staticRoutes, ...postRoutes];
+  // Published custom pages.
+  const customRoutes: MetadataRoute.Sitemap = customPages
+    .filter((p) => p.published && p.slug)
+    .map((p) => ({ url: `${base}/${p.slug}`, priority: 0.5 }));
+
+  return [...staticRoutes, ...postRoutes, ...customRoutes];
 }

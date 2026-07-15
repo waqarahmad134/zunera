@@ -17,6 +17,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SINGLETONS = ["site", "pages", "seo"];
 const COLLECTIONS = [
   "nav",
+  "custom-pages",
   "affiliations",
   "books",
   "papers",

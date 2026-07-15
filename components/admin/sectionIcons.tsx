@@ -1,6 +1,7 @@
 import {
   BookOpen, FileText, Library, FlaskConical, PenLine, Mic, Landmark,
-  User, Building2, Tags, Newspaper, Search, EyeOff, Menu, type LucideIcon,
+  User, Building2, Tags, Newspaper, Search, EyeOff, Menu, File,
+  type LucideIcon,
 } from "lucide-react";
 
 export const SECTION_ICONS: Record<string, LucideIcon> = {
@@ -8,6 +9,7 @@ export const SECTION_ICONS: Record<string, LucideIcon> = {
   pages: EyeOff,
   seo: Search,
   nav: Menu,
+  "custom-pages": File,
   affiliations: Building2,
   books: BookOpen,
   papers: FileText,

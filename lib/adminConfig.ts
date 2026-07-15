@@ -152,17 +152,27 @@ export const SECTIONS: SectionDef[] = [
         label: "Links to",
         type: "select",
         options: [
-          { value: "page", label: "A page on this site" },
+          { value: "page", label: "A built-in page" },
+          { value: "custom-page", label: "A custom page (About, Terms, …)" },
           { value: "custom", label: "A custom URL" },
         ],
         help: "Pick where this menu item goes.",
       },
       {
         key: "page",
-        label: "Site page",
+        label: "Built-in page",
         type: "select",
         options: SITE_PAGES.map((p) => ({ value: p.path, label: p.label })),
-        help: "Used when \"Links to\" is set to a page on this site.",
+        help: "Used when \"Links to\" is set to a built-in page.",
+      },
+      {
+        key: "pageSlug",
+        label: "Custom page",
+        type: "select",
+        optionsFrom: "custom-pages",
+        optionValue: "slug",
+        optionLabel: "title",
+        help: "Used when \"Links to\" is set to a custom page.",
       },
       {
         key: "url",
@@ -171,6 +181,36 @@ export const SECTIONS: SectionDef[] = [
         placeholder: "https://example.com",
         help: "Used when \"Links to\" is set to a custom URL. External links open in a new tab.",
       },
+    ],
+  },
+  {
+    slug: "custom-pages",
+    label: "Pages",
+    description:
+      "Standalone pages like About, Privacy Policy or Terms. Publish one, then link it from the Navigation Menu.",
+    itemTitleKey: "title",
+    columns: ["title", "slug", "published"],
+    fields: [
+      { key: "title", label: "Title", type: "text" },
+      {
+        key: "slug",
+        label: "Slug (in the URL)",
+        type: "slug",
+        help: "The page will live at /your-slug. Avoid names already used by the site (books, papers, blog, policy, cv, contact, chapters, commentary, in-progress).",
+      },
+      {
+        key: "content",
+        label: "Content",
+        type: "richtext",
+        help: "Use the toolbar for headings, bold, links, images and lists.",
+      },
+      {
+        key: "metaDescription",
+        label: "SEO description (optional)",
+        type: "textarea",
+        help: "The summary shown in search results. Plain text.",
+      },
+      { key: "published", label: "Published", type: "checkbox" },
     ],
   },
   {

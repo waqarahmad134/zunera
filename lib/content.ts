@@ -11,6 +11,7 @@ import type {
   Book,
   Category,
   Chapter,
+  CustomPage,
   InProgress,
   Interview,
   NavItem,
@@ -77,6 +78,17 @@ export async function getSeo(): Promise<Seo> {
 
 export async function getPages(): Promise<PagesMap> {
   return readSingleton<PagesMap>("pages", {});
+}
+
+/** All custom pages (published and drafts), in admin order. */
+export async function getCustomPages(): Promise<CustomPage[]> {
+  return readSection<CustomPage>("custom-pages");
+}
+
+/** A single published custom page by slug, or null. */
+export async function getCustomPage(slug: string): Promise<CustomPage | null> {
+  const pages = await getCustomPages();
+  return pages.find((p) => p.slug === slug && p.published) ?? null;
 }
 
 /** The main menu, in order. Falls back to the default menu before seeding. */
