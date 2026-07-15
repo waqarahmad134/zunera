@@ -14,7 +14,7 @@ import {
   fileToDataUrl,
   imageSizeError,
 } from "@/lib/clientImages";
-import { PubCard } from "@/components/admin/PubCardNode";
+import { PubCard, CARD_VARIANTS } from "@/components/admin/PubCardNode";
 
 function ToolbarButton({
   onClick,
@@ -57,6 +57,7 @@ export default function RichTextEditor({
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const [cardMenu, setCardMenu] = useState(false);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -196,14 +197,43 @@ export default function RichTextEditor({
             <ImagePlus size={15} />
           )}
         </ToolbarButton>
-        <ToolbarButton
-          title="Insert card"
-          onClick={() =>
-            editor.chain().focus().insertContent({ type: "pubCard", attrs: {} }).run()
-          }
-        >
-          <CreditCard size={15} />
-        </ToolbarButton>
+        <div className="relative">
+          <ToolbarButton
+            title="Insert card"
+            active={cardMenu}
+            onClick={() => setCardMenu((o) => !o)}
+          >
+            <CreditCard size={15} />
+          </ToolbarButton>
+          {cardMenu && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setCardMenu(false)}
+              />
+              <div className="absolute left-0 top-full z-20 mt-1 w-52 rounded-xl border border-line bg-white p-1 shadow-[0_8px_30px_rgba(33,31,26,0.12)]">
+                {Object.entries(CARD_VARIANTS).map(([key, v]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      editor
+                        .chain()
+                        .focus()
+                        .insertContent({ type: "pubCard", attrs: { variant: key } })
+                        .run();
+                      setCardMenu(false);
+                    }}
+                    className="block w-full rounded-lg px-3 py-2 text-left text-sm text-ink-soft hover:bg-paper-soft hover:text-ink transition-colors"
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
         <span className="mx-1 h-5 w-px bg-line" />
         <ToolbarButton
           title="Undo"
