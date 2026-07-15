@@ -3,7 +3,7 @@ import { ADMIN_COOKIE, adminToken } from "@/lib/auth";
 
 const PUBLIC_PATHS = ["/admin/login", "/api/admin/login"];
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
     return NextResponse.next();
