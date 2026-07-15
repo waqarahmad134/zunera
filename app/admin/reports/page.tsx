@@ -135,14 +135,14 @@ export default function ReportsPage() {
         <div className="rounded-2xl border border-line bg-white p-5 sm:p-6">
           <h2 className="text-base font-semibold">Revenue</h2>
           <div className="mt-5">
-            <BarChart data={report?.series.map((s) => ({ date: s.date, value: s.revenue })) ?? []} formatValue={formatCurrency} />
+            <BarChart data={report?.series?.map((s) => ({ date: s.date, value: s.revenue })) ?? []} formatValue={formatCurrency} />
           </div>
         </div>
         <div className="rounded-2xl border border-line bg-white p-5 sm:p-6">
           <h2 className="text-base font-semibold">Expenses</h2>
           <div className="mt-5">
             <BarChart
-              data={report?.series.map((s) => ({ date: s.date, value: s.expenses })) ?? []}
+              data={report?.series?.map((s) => ({ date: s.date, value: s.expenses })) ?? []}
               formatValue={formatCurrency}
               color="#d03b3b"
             />

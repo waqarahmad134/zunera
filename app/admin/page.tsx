@@ -18,9 +18,12 @@ export default function DashboardPage() {
   useEffect(() => {
     let cancelled = false;
     fetch("/api/admin/stats")
-      .then((r) => r.json())
+      .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (!cancelled) setStats(d);
+      })
+      .catch(() => {
+        if (!cancelled) setStats(null);
       });
     return () => {
       cancelled = true;
@@ -111,7 +114,7 @@ export default function DashboardPage() {
         >
           <h2 className="text-base font-semibold">Orders — last 14 days</h2>
           <div className="mt-5">
-            <BarChart data={stats?.daily.map((d) => ({ date: d.date, value: d.orders })) ?? []} />
+            <BarChart data={stats?.daily?.map((d) => ({ date: d.date, value: d.orders })) ?? []} />
           </div>
         </motion.div>
 
@@ -124,7 +127,7 @@ export default function DashboardPage() {
           <h2 className="text-base font-semibold">Revenue — last 14 days</h2>
           <div className="mt-5">
             <BarChart
-              data={stats?.daily.map((d) => ({ date: d.date, value: d.revenue })) ?? []}
+              data={stats?.daily?.map((d) => ({ date: d.date, value: d.revenue })) ?? []}
               formatValue={(n) => formatCurrency(n)}
             />
           </div>
