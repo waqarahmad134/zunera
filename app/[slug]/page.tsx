@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getCustomPage } from "@/lib/content";
 import { RESERVED_SLUGS } from "@/lib/data";
 import { HeroText } from "@/components/motion";
+import PageHeader from "@/components/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -36,18 +37,16 @@ export default async function CustomPageRoute({
   if (!page) notFound();
 
   return (
-    <article className="mx-auto max-w-3xl px-5 sm:px-8 pt-16 sm:pt-24">
-      <HeroText>
-        <h1 className="font-serif text-4xl sm:text-5xl tracking-tight leading-[1.1]">
-          {page.title}
-        </h1>
-      </HeroText>
-      <HeroText delay={0.1}>
-        <div
-          className="prose-z mt-8"
-          dangerouslySetInnerHTML={{ __html: page.content }}
-        />
-      </HeroText>
-    </article>
+    <>
+      <PageHeader title={page.title} />
+      <section className="mx-auto max-w-6xl px-5 sm:px-8 pb-8">
+        <HeroText delay={0.1}>
+          <div
+            className="prose-z max-w-3xl"
+            dangerouslySetInnerHTML={{ __html: page.content }}
+          />
+        </HeroText>
+      </section>
+    </>
   );
 }
