@@ -25,6 +25,7 @@ const FIELDS: { key: string; placeholder: string; className: string }[] = [
 
 function PubCardView({ node, updateAttributes, deleteNode }: ReactNodeViewProps) {
   const attrs = node.attrs as Record<string, string>;
+  const hasContent = attrs.year || attrs.title || attrs.subtitle || attrs.meta;
   return (
     <NodeViewWrapper
       className="my-3 rounded-2xl border border-line bg-paper-soft/50 p-4"
@@ -32,7 +33,7 @@ function PubCardView({ node, updateAttributes, deleteNode }: ReactNodeViewProps)
     >
       <div className="mb-2.5 flex items-center justify-between">
         <span className="text-[11px] font-semibold uppercase tracking-wide text-accent">
-          Card
+          Card{attrs.href ? " · linked" : ""}
         </span>
         <button
           type="button"
@@ -43,6 +44,21 @@ function PubCardView({ node, updateAttributes, deleteNode }: ReactNodeViewProps)
           <Trash2 size={14} />
         </button>
       </div>
+
+      {/* Live preview — exactly how the card renders on the site. */}
+      {hasContent && (
+        <div className="pub-card" style={{ margin: "0 0 0.85rem" }}>
+          <div className="pub-card-inner">
+            {attrs.year && <span className="pub-card-year">{attrs.year}</span>}
+            <div className="pub-card-main">
+              <h3 className="pub-card-title">{attrs.title || "Untitled"}</h3>
+              {attrs.subtitle && <p className="pub-card-sub">{attrs.subtitle}</p>}
+              {attrs.meta && <p className="pub-card-meta">{attrs.meta}</p>}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-2">
         {FIELDS.map((f) => (
           <input
