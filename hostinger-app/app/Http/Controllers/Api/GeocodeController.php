@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Throwable;
 
 // Proxies OpenStreetMap's free Nominatim service server-side so we can set
 // the User-Agent their usage policy requires and cache repeat lookups.
@@ -21,30 +22,31 @@ class GeocodeController extends Controller
         }
 
         $cacheKey = 'geocode:' . md5($q);
+        if (cache()->has($cacheKey)) {
+            return response()->json(['location' => cache()->get($cacheKey)]);
+        }
 
-        $location = cache()->remember($cacheKey, 3600, function () use ($q) {
+        try {
             $res = Http::withHeaders(['User-Agent' => self::USER_AGENT])
                 ->get('https://nominatim.openstreetmap.org/search', [
                     'q' => $q,
                     'format' => 'jsonv2',
                     'limit' => 1,
                 ]);
-
-            if (!$res->successful()) {
-                return ['__error' => true];
-            }
-
-            $results = $res->json();
-            if (!is_array($results) || count($results) === 0) {
-                return null;
-            }
-
-            return ['lat' => (float) $results[0]['lat'], 'lng' => (float) $results[0]['lon']];
-        });
-
-        if (is_array($location) && ($location['__error'] ?? false)) {
+        } catch (Throwable) {
             return response()->json(['error' => 'Geocoding service unavailable.'], 502);
         }
+
+        if (!$res->successful()) {
+            return response()->json(['error' => 'Geocoding service unavailable.'], 502);
+        }
+
+        $results = $res->json();
+        $location = (is_array($results) && count($results) > 0)
+            ? ['lat' => (float) $results[0]['lat'], 'lng' => (float) $results[0]['lon']]
+            : null;
+
+        cache()->put($cacheKey, $location, 3600);
 
         return response()->json(['location' => $location]);
     }
@@ -58,25 +60,27 @@ class GeocodeController extends Controller
         }
 
         $cacheKey = 'reverse-geocode:' . $lat . ':' . $lng;
+        if (cache()->has($cacheKey)) {
+            return response()->json(['address' => cache()->get($cacheKey)]);
+        }
 
-        $address = cache()->remember($cacheKey, 3600, function () use ($lat, $lng) {
+        try {
             $res = Http::withHeaders(['User-Agent' => self::USER_AGENT])
                 ->get('https://nominatim.openstreetmap.org/reverse', [
                     'lat' => $lat,
                     'lon' => $lng,
                     'format' => 'jsonv2',
                 ]);
-
-            if (!$res->successful()) {
-                return ['__error' => true];
-            }
-
-            return $res->json('display_name');
-        });
-
-        if (is_array($address) && ($address['__error'] ?? false)) {
+        } catch (Throwable) {
             return response()->json(['error' => 'Reverse geocoding service unavailable.'], 502);
         }
+
+        if (!$res->successful()) {
+            return response()->json(['error' => 'Reverse geocoding service unavailable.'], 502);
+        }
+
+        $address = $res->json('display_name');
+        cache()->put($cacheKey, $address, 3600);
 
         return response()->json(['address' => $address]);
     }
